@@ -2,12 +2,14 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
+import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math';
 import { Color3 } from '@babylonjs/core/Maths/math';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import { Space } from '@babylonjs/core/Maths/math.axis';
 import '@babylonjs/core/Materials/standardMaterial';
 import * as TWEEN from '@tweenjs/tween.js';
 
@@ -31,7 +33,8 @@ function initialize() {
   const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
   const engine = new Engine(canvas, true);
   const scene = new Scene(engine);
-  const camera = new UniversalCamera('camera1', new Vector3(0, 3, 0), scene);
+  const camera = new ArcRotateCamera('camera', 0, 0, 2, new Vector3(0, 0, 0), scene);
+  // const camera = new UniversalCamera('camera1', new Vector3(0, 3, 0), scene);
   const names = [
     'Lara Pede',
     'Miranda Lee',
@@ -64,7 +67,9 @@ function initialize() {
   const colors = makeColorGradient(0.9, 0.9, 0.9, 0, 2, 4, 164, 91);
   const light = new HemisphericLight("light1", new Vector3(0, 0, -1), scene);
 
-  light.intensity = 1;
+  camera.attachControl(canvas, true);
+
+  light.intensity = 10;
   
   names.forEach((name, index) => {
     const slice = MeshBuilder.CreateCylinder(`cylendar_${name}`, {
@@ -73,11 +78,11 @@ function initialize() {
     }, scene);
     const nameTexture = new DynamicTexture(`name_${name}`, {
       width: 500,
-      height: 150,
+      height: 50,
     }, scene);
     const namePlane = MeshBuilder.CreatePlane(`name_${name}`, {
       width: .5,
-      height: .15,
+      height: .05,
     }, scene);
     const nameMaterial = new StandardMaterial("Mat", scene); 
 
@@ -89,18 +94,33 @@ function initialize() {
     namePlane.material = nameMaterial;
     nameMaterial.ambientColor = new Color3(1, 1, 1);
 
-    nameTexture.drawText(name, null, null, '24px Arial', "#000000", "#ffffff", true);
+    // nameTexture.hasAlpha = true;
+    nameTexture.drawText(name, 200, null, '30px Arial', "#ffffff", null, true);
     nameTexture.update();
 
     // Position name plate
     namePlane.rotation.x = Math.PI / 2;
-    namePlane.position.y = 1;
+    namePlane.position.y = 0.01;
+    // namePlane.position.z = 0.1;
+    namePlane.position.x = 0.25;
+
     namePlane.scaling.y = -1;
     namePlane.scaling.x = -1;
+    
+    const currentPivot = namePlane.getAbsolutePivotPoint();
+
+    console.log(currentPivot);
+
+    // namePlane.position = currentPivot;
+
+    // namePlane.setPivotPoint(new Vector3(-0.125, namePlane.position.y, 0), Space.WORLD);
+    // namePlane.rotation.y = ((Math.PI * 2) * sizeOfSlice) * index;
 
     // Setup slice position and parent
-    slice.rotation.y = ((Math.PI * 2) * sizeOfSlice) * index;
+    slice.rotation.y = ((Math.PI * 2) * sizeOfSlice) * (index + 0.5);
+
     slice.parent = transformNode;
+    // slice.visibility = false;
 
     slices.push(slice);
   });
