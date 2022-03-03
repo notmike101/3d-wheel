@@ -1,128 +1,129 @@
+import { Engine } from '@babylonjs/core/Engines/engine';
+import { Scene } from '@babylonjs/core/scene';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
+import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
+import { Vector3 } from '@babylonjs/core/Maths/math';
+import { Color3 } from '@babylonjs/core/Maths/math';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
+import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import '@babylonjs/core/Materials/standardMaterial';
+import * as TWEEN from '@tweenjs/tween.js';
+
 import './style.scss';
 
-class App {
-  private options: string[];
-  private app: HTMLElement;
-  private wheel: HTMLElement;
-  private startingPosition: number = 0;
+function makeColorGradient(frequency1, frequency2, frequency3, phase1, phase2, phase3, center = 128, width = 127, len = 50) {
+  const output = [];
 
-  constructor(app: HTMLElement, options: string[] = []) {
-    if (options.length < 4) {
-      throw new Error('You need at least 4 options to play my game');
-    }
+  for (let i = 0; i < len; ++i) {
+    const red = Math.sin(frequency1*i + phase1) * width + center;
+    const grn = Math.sin(frequency2*i + phase2) * width + center;
+    const blu = Math.sin(frequency3*i + phase3) * width + center;
 
-    this.options = options;
-    this.app = app;
-    this.wheel = this.app.querySelector('.wheel')!;
-
-    this.createWheelElements();
-    this.alignToRandomOption();
-    this.createActivateButton();
+    output.push(new Color3(red/255, grn/255, blu/255));
   }
 
-  get wheelOptions(): NodeListOf<HTMLDivElement> {
-    return this.app.querySelectorAll('.wheel-item')!;
-  }
+  return output;
+}
 
-  private createActivateButton(): void {
-    const button: HTMLButtonElement = document.createElement('button');
+function initialize() {
+  const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
+  const engine = new Engine(canvas, true);
+  const scene = new Scene(engine);
+  const camera = new UniversalCamera('camera1', new Vector3(0, 3, 0), scene);
+  const names = [
+    'Lara Pede',
+    'Miranda Lee',
+    'Phillip McNallen',
+    'Chase Erickson',
+    'Jose Vasqez',
+    'Isaac Sosa',
+    'Mike Orozco',
+    'Alejandro Favela',
+    'Adam Clinkenbeard',
+    'Julie Serna',
+    'Sophia Harris',
+    'Yessenia Flores',
+    'Victoria Alfano',
+    'Rachel Nador',
+    'Raul Chatham',
+    'Brandon Grada',
+    'Franciso (Javier ...',
+    'Jason Pavik',
+    'Gil Yefet',
+    'Ana Nuez',
+    'Denise Byrum',
+    'Sam Howard',
+    'Erick Rodriguez',
+    'Sandra Ornelas',
+  ];
+  const sizeOfSlice = 1 / names.length;
+  const slices: Array<any> = [];
+  const transformNode = new TransformNode('transformNode', scene);
+  const colors = makeColorGradient(0.9, 0.9, 0.9, 0, 2, 4, 164, 91);
+  const light = new HemisphericLight("light1", new Vector3(0, 0, -1), scene);
 
-    button.classList.add('activate-button');
-    button.textContent = 'SPIN THE WHEEL';
+  light.intensity = 1;
+  
+  names.forEach((name, index) => {
+    const slice = MeshBuilder.CreateCylinder(`cylendar_${name}`, {
+      arc: sizeOfSlice,
+      height: 0.01,
+    }, scene);
+    const nameTexture = new DynamicTexture(`name_${name}`, {
+      width: 500,
+      height: 150,
+    }, scene);
+    const namePlane = MeshBuilder.CreatePlane(`name_${name}`, {
+      width: .5,
+      height: .15,
+    }, scene);
+    const nameMaterial = new StandardMaterial("Mat", scene); 
 
-    button.addEventListener('click', (): void => {
-      this.rotateToRandomOption();
-    });
+    slice.material = new StandardMaterial(`material_${name}`, scene);
+    slice.material.emissiveColor = colors[index];
+    slice.material.diffuseColor = new Color3(0, 0, 0);
 
-    this.app.appendChild(button);
-  }
+    nameMaterial.diffuseTexture = nameTexture;
+    namePlane.material = nameMaterial;
+    nameMaterial.ambientColor = new Color3(1, 1, 1);
 
-  private createWheelElements(): void {
-    this.options.forEach((option: string) => {
-      const optionElement: HTMLDivElement = document.createElement('div');
-      const optionText: HTMLParagraphElement = document.createElement('p');
+    nameTexture.drawText(name, null, null, '24px Arial', "#000000", "#ffffff", true);
+    nameTexture.update();
 
-      optionElement.classList.add('wheel-item');
-      optionText.classList.add('wheel-text');
-      optionText.textContent = option;
-      
-      optionElement.appendChild(optionText);
-      this.wheel.appendChild(optionElement);
-    });
+    // Position name plate
+    namePlane.rotation.x = Math.PI / 2;
+    namePlane.position.y = 1;
+    namePlane.scaling.y = -1;
+    namePlane.scaling.x = -1;
 
-    const rotateAmount: number = 360 / this.wheelOptions.length;
-    const skewAmount: number = Math.floor(90 - rotateAmount) * -1;
+    // Setup slice position and parent
+    slice.rotation.y = ((Math.PI * 2) * sizeOfSlice) * index;
+    slice.parent = transformNode;
 
-    this.wheelOptions.forEach((wheelOption: HTMLDivElement, index: number) => {
-      const randomColor: string = Math.floor(Math.random() * 16777215).toString(16) + '55';
-      const optionText: HTMLParagraphElement = wheelOption.querySelector('.wheel-text')!;
+    slices.push(slice);
+  });
 
-      optionText.style.transform = `skewY(${skewAmount * -1}deg)`;
-      wheelOption.style.transform = `rotate(${rotateAmount * index}deg) skewY(${skewAmount}deg)`;
-      wheelOption.style.backgroundColor = '#' + randomColor;
-    });
-  }
+  window.slices = slices;
 
-  public alignToRandomOption(): void {
-    const randomIndex: number = Math.floor(Math.random() * this.wheelOptions.length);
-    const sizeOfEntry: number = 360 / this.wheelOptions.length;
-    const targetItem: number = (randomIndex * sizeOfEntry);
-    const rotateAmount: number = targetItem + (sizeOfEntry / 2);
-    
-    this.rotate(rotateAmount, 0, 0);
-  }
+  camera.setTarget(Vector3.Zero());
 
-  public rotateToRandomOption(): void {
-    const randomIndex: number = Math.floor(Math.random() * this.wheelOptions.length);
-    const sizeOfEntry: number = 360 / this.wheelOptions.length;
-    const targetItem: number = (randomIndex * sizeOfEntry);
-    const rotateAmount: number = targetItem + (sizeOfEntry / 2);
+  engine.runRenderLoop(() => {
+    TWEEN.update(performance.now());
+    scene.render();
+  });
 
-    
-    this.rotate(rotateAmount, 5, 10000);
-  }
+  window.addEventListener('resize', () => {
+    engine.resize();
+  });
 
-  private rotate(degrees: number, rotations: number = 1, duration: number = 4000): void {
-    const endPosition: number = degrees + (rotations * 360);
+  document.getElementById('spin')?.addEventListener('click', () => {
+    new TWEEN.Tween(transformNode.rotation)
+      .to({ y: transformNode.rotation.y + Math.random() * 5 + 50 }, 5000)
+      .easing(TWEEN.Easing.Quartic.InOut)
+      .start();
+  });
+}
 
-    this.wheel.animate(
-      [
-        { transform: `rotate(${this.startingPosition}deg)` },
-        { transform: `rotate(${endPosition}deg)` },
-      ],
-      {
-        duration,
-        iterations: 1,
-        easing: 'ease-in-out',
-        fill: 'forwards',
-      }
-    );
-
-    this.startingPosition = endPosition % 360;
-  }
-};
-
-const appElement: HTMLDivElement = document.querySelector('#app')!;
-const options: string[] = [
-  'Raul',
-  'Chase',
-  'Alejandro',
-  'Brandon',
-  'Sam',
-  'Miranda',
-  'Phil',
-  'Jakrey',
-  'Rachel',
-  'Ana',
-  'Sandra',
-  'Jason',
-  'Lara',
-  'Zia',
-  'Javier',
-  'Tony',
-  'Isaac',
-  'Jose',
-  'Gilahd',
-];
-
-new App(appElement, options);
+window.addEventListener('DOMContentLoaded', initialize);

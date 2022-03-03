@@ -1,6 +1,6 @@
 {
-  "name": "vanilla-ts",
-  "version": "0.0.0",
+  "name": "3d-wheel",
+  "version": "0.0.1",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -11,5 +11,9 @@
     "typescript": "^4.3.2",
     "vite": "^2.6.4",
     "vite-plugin-pug": "^0.3.0"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^5.0.0-rc.0",
+    "@tweenjs/tween.js": "^18.6.4"
   }
 }
