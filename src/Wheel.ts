@@ -9,10 +9,11 @@ import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTextur
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Space } from '@babylonjs/core/Maths/math.axis';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 import '@babylonjs/core/Materials/standardMaterial';
 import { update as TweenUpdate, Tween } from '@tweenjs/tween.js';
 
-function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) {
+function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output = [];
 
   for (let i = 0; i < len; ++i) {
@@ -90,14 +91,14 @@ export class Wheel {
   }
 
   #createSlices(): void {
-    for (let index = 0; index < this.wheelOptions.length; ++index) {
-      const wheelOption = this.wheelOptions[index];
-      const slice = MeshBuilder.CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
-      const sliceColor = new StandardMaterial(`material_${wheelOption}`, this.scene);
-      const nameTexture = new DynamicTexture(`name_${wheelOption}`, { width: 500, height: 50 }, this.scene);
-      const namePlane = MeshBuilder.CreatePlane(`name_${wheelOption}`, { width: .5, height: .05 }, this.scene);
-      const nameMaterial = new StandardMaterial("Mat", this.scene);
-      let namePivot = null;
+    for (let index: number = 0; index < this.wheelOptions.length; ++index) {
+      const wheelOption: any = this.wheelOptions[index];
+      const slice: Mesh = MeshBuilder.CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
+      const sliceColor: StandardMaterial = new StandardMaterial(`material_${wheelOption}`, this.scene);
+      const nameTexture: DynamicTexture = new DynamicTexture(`name_${wheelOption}`, { width: 500, height: 50 }, this.scene);
+      const namePlane: Mesh = MeshBuilder.CreatePlane(`name_${wheelOption}`, { width: .5, height: .05 }, this.scene);
+      const nameMaterial: StandardMaterial = new StandardMaterial("Mat", this.scene);
+      let namePivot: Vector3 = Vector3.Zero();
   
       nameTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
       nameTexture.hasAlpha = true;
@@ -138,8 +139,8 @@ export class Wheel {
   }
 
   #createWinnerPointer(): void {
-    const winnerPointer = MeshBuilder.CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
-    const winnerPointerMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
+    const winnerPointer: Mesh = MeshBuilder.CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
+    const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
   
     winnerPointerMaterial.emissiveColor = Color3.White();
   
@@ -169,10 +170,10 @@ export class Wheel {
         .to({ y: this.transformNode.rotation.y + 30 }, 8000)
         .easing(x=> x<.279?2**(10*x-3.8)-0.0717936471873147:1.2-2**(-10*(x-.2))-0.19609374999999996)
         .onComplete(({ y }) => {
-          const sliceArcWidth = ((Math.PI * 2) * this.sizeOfSlice);
-          const finalAngleOfRotation = (y-sliceArcWidth / 2) % (Math.PI * 2) ;
-          const winningSlot = finalAngleOfRotation / sliceArcWidth;
-          const fixWinningSlot = Math.floor(this.wheelOptions.length-winningSlot) % this.wheelOptions.length;
+          const sliceArcWidth: number = ((Math.PI * 2) * this.sizeOfSlice);
+          const finalAngleOfRotation: number = (y-sliceArcWidth / 2) % (Math.PI * 2);
+          const winningSlot: number = finalAngleOfRotation / sliceArcWidth;
+          const fixWinningSlot: number = Math.floor(this.wheelOptions.length-winningSlot) % this.wheelOptions.length;
 
           resolve(this.wheelOptions[fixWinningSlot]);
         })
