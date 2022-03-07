@@ -7,8 +7,10 @@ html
     title Weekly Meeting Host Picker
 
   body
+    div(id="clickToSpin") Click to spin!
     canvas(id="renderCanvas")
-    div(id="buttons")
-      button(id="spin") Spin
     div(id="winner")
+    div(id="fireworks", class="pyro")
+      div(class="before")
+      div(class="after")
     script(type="module", src="./src/main.ts")
