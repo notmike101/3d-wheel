@@ -70,7 +70,7 @@ export class Wheel {
     this.initialize();
   }
 
-  initialize() {
+  initialize(): void {
     this.shuffleNames();
     this.#createSlices();
     this.#createWinnerPointer();
@@ -84,12 +84,12 @@ export class Wheel {
     this.spinBeforeInteraction.start();
   }
 
-  #renderLoop() {
+  #renderLoop(): void {
     TweenUpdate(performance.now());
     this.scene.render();
   }
 
-  #createSlices() {
+  #createSlices(): void {
     for (let index = 0; index < this.wheelOptions.length; ++index) {
       const wheelOption = this.wheelOptions[index];
       const slice = MeshBuilder.CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
@@ -137,7 +137,7 @@ export class Wheel {
     }
   }
 
-  #createWinnerPointer() {
+  #createWinnerPointer(): void {
     const winnerPointer = MeshBuilder.CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
     const winnerPointerMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
   
@@ -149,15 +149,15 @@ export class Wheel {
     winnerPointer.material = winnerPointerMaterial;
   }
 
-  #resizeEvent() {
+  #resizeEvent(): void {
     this.engine.resize();
   }
 
-  shuffleNames() {
+  shuffleNames(): void {
     shuffleArrayInPlace(this.wheelOptions);
   }
 
-  spin() {
+  spin(): Promise<string> {
     return new Promise((resolve, reject) => {
       if (this.isSpinning) return reject('Wheel is already spinning');
 

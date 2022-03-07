@@ -6,20 +6,20 @@ function parseHash(): string[] {
   return decodeURI(location.hash.substring(1, location.hash.length)).split('|') ?? [];
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
-  const winnerDiv = document.getElementById('winner') as HTMLDivElement;
-  const fireworkDiv = document.getElementById('fireworks') as HTMLDivElement;
-  const clickToSpinDiv = document.getElementById('clickToSpin') as HTMLDivElement;
-  const wheelOptions = parseHash();
-  const wheel = new Wheel(canvas, wheelOptions);
+window.addEventListener('DOMContentLoaded', (): void => {
+  const canvas: HTMLCanvasElement = document.getElementById('renderCanvas') as HTMLCanvasElement;
+  const winnerDiv: HTMLDivElement = document.getElementById('winner') as HTMLDivElement;
+  const fireworkDiv: HTMLDivElement = document.getElementById('fireworks') as HTMLDivElement;
+  const clickToSpinDiv: HTMLDivElement = document.getElementById('clickToSpin') as HTMLDivElement;
+  const wheelOptions: string[] = parseHash();
+  const wheel: Wheel = new Wheel(canvas, wheelOptions);
 
-  window.addEventListener('pointerup', async () => {
+  window.addEventListener('pointerup', async (): Promise<void> => {
     if (winnerDiv) winnerDiv.style.display = 'none';
     if (fireworkDiv) fireworkDiv.style.display = 'none';
     if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
 
-    const winner = await wheel.spin();
+    const winner: string = await wheel.spin();
 
     if (winnerDiv) {
       winnerDiv.style.display = 'block';
