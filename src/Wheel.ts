@@ -175,6 +175,8 @@ export class Wheel {
           const winningSlot: number = finalAngleOfRotation / sliceArcWidth;
           const fixWinningSlot: number = Math.floor(this.wheelOptions.length-winningSlot) % this.wheelOptions.length;
 
+          this.isSpinning = false;
+
           resolve(this.wheelOptions[fixWinningSlot]);
         })
         .start();
