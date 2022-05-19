@@ -2,17 +2,16 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
-import { CreateDisc } from '@babylonjs/core/Meshes/Builders/discBuilder';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { Texture, Space } from './constants';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { update as TweenUpdate, Tween } from '@tweenjs/tween.js';
-
-import type { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { Texture, Space } from './constants';
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output = [];
@@ -65,6 +64,8 @@ export class Wheel {
     this.transformNode = new TransformNode('transformNode', this.scene);
     this.colors = makeColorGradient(0.9, 0.9, 0.9, 0, 2, 4, 164, 91);
 
+    // this.camera.attachControl(this.canvas, true);
+
     this.spinBeforeInteraction = new Tween(this.transformNode.rotation)
       .to({ y: this.transformNode.rotation.y + Math.PI * 2 }, 100000)
       .repeat(Infinity);
@@ -93,13 +94,13 @@ export class Wheel {
 
   #createSlices(): void {
     for (let index: number = 0; index < this.wheelOptions.length; ++index) {
-      const wheelOption: any = this.wheelOptions[index];
+      const wheelOption: string = this.wheelOptions[index];
       const slice: Mesh = CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
+      const slicePeg: Mesh = CreateCylinder(`cylendar_${wheelOption}_peg`, { height: 1 }, this.scene);
       const sliceColor: StandardMaterial = new StandardMaterial(`material_${wheelOption}`, this.scene);
       const nameTexture: DynamicTexture = new DynamicTexture(`name_${wheelOption}`, { width: 500, height: 50 }, this.scene);
       const namePlane: Mesh = CreatePlane(`name_${wheelOption}`, { width: .5, height: .05 }, this.scene);
       const nameMaterial: StandardMaterial = new StandardMaterial("Mat", this.scene);
-      let namePivot: Vector3 = Vector3.Zero();
   
       nameTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
       nameTexture.hasAlpha = true;
@@ -111,11 +112,6 @@ export class Wheel {
       nameMaterial.useAlphaFromDiffuseTexture = true;
       nameMaterial.diffuseTexture = nameTexture;
       nameMaterial.ambientColor = new Color3(1, 1, 1);
-  
-      sliceColor.emissiveColor = this.colors[index];
-      sliceColor.diffuseColor = Color3.Black();
-  
-      slice.material = sliceColor;
 
       namePlane.material = nameMaterial;
       namePlane.rotation.x = Math.PI / 2;
@@ -125,31 +121,84 @@ export class Wheel {
       namePlane.scaling.x = -1;
       
       namePlane.setPivotPoint(new Vector3(0, namePlane.position.y, 0), Space.WORLD);
-      
-      namePivot = namePlane.getPivotPoint();
-  
-      namePlane.position.x -= namePivot.x * 2;
+        
+      namePlane.position.x -= namePlane.getPivotPoint().x * 2;
       namePlane.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * index;
   
-      slice.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * (index + 0.54);
+      sliceColor.emissiveColor = this.colors[index];
+      sliceColor.diffuseColor = Color3.Black();
   
+      slice.material = sliceColor;
+      slice.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * (index + 0.5);
+
+      slicePeg.scaling.x = 0.01;
+      slicePeg.scaling.y = 0.01;
+      slicePeg.scaling.z = 0.01;
+      slicePeg.position.x = 0.49;
+      slicePeg.position.y = 0.01;
+
+      slicePeg.setPivotPoint(new Vector3(0, slicePeg.position.y, 0), Space.WORLD);
+
+      slicePeg.position.x -= slicePeg.getPivotPoint().x * 0.99;
+      slicePeg.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * index;
+
+      slicePeg.parent = this.transformNode;
       slice.parent = this.transformNode;
-  
       namePlane.parent = this.transformNode;
     }
   }
 
   // This needs to be fixed...
+  // Best solution is to create a flat triangle at a higher Y position than the wheel
   #createWinnerPointer(): void {
-    const winnerPointer: Mesh = CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
+    const winnerPointer: Mesh = new Mesh('winnerPointer', this.scene);
+    const winnerPointerBorder: Mesh = new Mesh('winnerPointer', this.scene);
     const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
-  
+    const winnerPointerBorderMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
+
+    const winnerPointerVertexData = new VertexData();
+
+    winnerPointerVertexData.positions = [
+      3, 0, -2,
+      0, 0, 6,
+      -3, 0, -2,
+    ];
+    
+    winnerPointerVertexData.indices = [0, 1, 2];
+    winnerPointerVertexData.normals = [];
+
+    winnerPointer.scaling.x /= 200;
+    winnerPointer.scaling.y /= 200;
+    winnerPointer.scaling.z /= 200;
+    winnerPointer.rotation.y = -Math.PI / 2;
+    winnerPointer.position.y = 0.011;
+    winnerPointer.position.x = 0.52;
+    winnerPointerBorder.scaling.x /= 180;
+    winnerPointerBorder.scaling.y /= 180;
+    winnerPointerBorder.scaling.z /= 180;
+    winnerPointerBorder.rotation.y = -Math.PI / 2;
+    winnerPointerBorder.position.y = 0.01;
+    winnerPointerBorder.position.x = 0.52;
+
+    VertexData.ComputeNormals(winnerPointerVertexData.positions, winnerPointerVertexData.indices, winnerPointerVertexData.normals)
+
+    winnerPointerVertexData.applyToMesh(winnerPointer);
+    winnerPointerVertexData.applyToMesh(winnerPointerBorder);
+
     winnerPointerMaterial.emissiveColor = Color3.White();
-  
-    winnerPointer.position.set(0.52, 0.009, 0);
-    winnerPointer.rotation.set(Math.PI / 2, Math.PI, 0);
-    winnerPointer.scaling.set(0.08, 0.03, 0);
+    winnerPointerBorderMaterial.emissiveColor = Color3.Black();
     winnerPointer.material = winnerPointerMaterial;
+    winnerPointerBorder.material = winnerPointerBorderMaterial;
+    
+    // const winnerPointer: Mesh = CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
+    // const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
+  
+    // winnerPointerMaterial.emissiveColor = Color3.White();
+  
+    // winnerPointer.position.set(0.52, 0.009, 0);
+    // winnerPointer.rotation.set(Math.PI / 2, Math.PI, 0);
+    // winnerPointer.scaling.set(0.08, 0.03, 0);
+    // winnerPointer.material = winnerPointerMaterial;
   }
 
   #resizeEvent(): void {
