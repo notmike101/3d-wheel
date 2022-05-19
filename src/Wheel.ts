@@ -139,6 +139,7 @@ export class Wheel {
     }
   }
 
+  // This needs to be fixed...
   #createWinnerPointer(): void {
     const winnerPointer: Mesh = CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
     const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
