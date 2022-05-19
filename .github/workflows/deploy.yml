@@ -18,6 +18,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Push changes
         uses: ptienchuan/deploy-github-pages-action@master
         env:
