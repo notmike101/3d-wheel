@@ -16,12 +16,12 @@ window.addEventListener('DOMContentLoaded', (): void => {
   const wheel: Wheel = new Wheel(canvas, wheelOptions);
   const help: Help = new Help();
 
-  help.initialize();
-
   async function spinWheel() {
     if (winnerDiv) winnerDiv.style.display = 'none';
     if (fireworkDiv) fireworkDiv.style.display = 'none';
     if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
+    
+    help.enabled = false;
 
     const winner: string = await wheel.spin();
 
@@ -39,6 +39,8 @@ window.addEventListener('DOMContentLoaded', (): void => {
       clickToSpinDiv.style.top = 'calc(50% - 50px)';
       clickToSpinDiv.style.display = 'flex';
     }
+
+    help.enabled = true;
   }
 
   canvas.addEventListener('pointerup', spinWheel);
