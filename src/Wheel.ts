@@ -38,16 +38,16 @@ function shuffleArrayInPlace(target: any[]): void {
 }
 
 export class Wheel {
-  canvas: HTMLCanvasElement;
-  engine: Engine;
-  scene: Scene;
-  camera: ArcRotateCamera;
-  wheelOptions: string[];
-  transformNode: TransformNode;
-  colors: Color3[];
-  sizeOfSlice: number;
-  spinBeforeInteraction: Tween<any>;
-  isSpinning: boolean;
+  private canvas: HTMLCanvasElement;
+  private engine: Engine;
+  private scene: Scene;
+  private camera: ArcRotateCamera;
+  private wheelOptions: string[];
+  private transformNode: TransformNode;
+  private colors: Color3[];
+  private sizeOfSlice: number;
+  private spinBeforeInteraction: Tween<any>;
+  private isSpinning: boolean;
 
   constructor(canvas: HTMLCanvasElement, wheelOptions: string[] = []) {
     if (!canvas) throw new Error('No canvas provided');
@@ -73,26 +73,26 @@ export class Wheel {
     this.initialize();
   }
 
-  initialize(): void {
+  protected initialize(): void {
     this.shuffleNames();
-    this.#createSlices();
-    this.#createWinnerPointer();
+    this.createSlices();
+    this.createWinnerPointer();
 
-    this.engine.runRenderLoop(this.#renderLoop.bind(this));
+    this.engine.runRenderLoop(this.renderLoop.bind(this));
 
     this.camera.setTarget(Vector3.Zero());
   
-    window.addEventListener('resize', this.#resizeEvent.bind(this));
+    window.addEventListener('resize', this.resizeEvent.bind(this));
 
     this.spinBeforeInteraction.start();
   }
 
-  #renderLoop(): void {
+  private renderLoop(): void {
     TweenUpdate(performance.now());
     this.scene.render();
   }
 
-  #createPeg(offset: number = 0, parent: any = null): void {
+  private createPeg(offset: number = 0, parent: any = null): void {
     const peg: Mesh = CreateCylinder('peg', { height: 1 }, this.scene);
 
     peg.scaling.x = 0.01;
@@ -111,7 +111,7 @@ export class Wheel {
     }
   }
 
-  #createName(name: string = '', offset: number = 0, parent: any = null): void {
+  private createName(name: string = '', offset: number = 0, parent: any = null): void {
     const nameTexture: DynamicTexture = new DynamicTexture(`name_${name}`, { width: 500, height: 50 }, this.scene);
     const namePlane: Mesh = CreatePlane(`name_${name}`, { width: .5, height: .05 }, this.scene);
     const nameMaterial: StandardMaterial = new StandardMaterial("Mat", this.scene);
@@ -144,7 +144,7 @@ export class Wheel {
     }
   }
 
-  #createSlices(): void {
+  private createSlices(): void {
     for (let index: number = 0; index < this.wheelOptions.length; ++index) {
       const wheelOption: string = this.wheelOptions[index];
       const slice: Mesh = CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
@@ -156,14 +156,14 @@ export class Wheel {
       slice.material = sliceColor;
       slice.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * (index + 0.5);
 
-      this.#createName(wheelOption, index, this.transformNode);
-      this.#createPeg(index, this.transformNode);
+      this.createName(wheelOption, index, this.transformNode);
+      // this.createPeg(index, this.transformNode);
 
       slice.parent = this.transformNode;
     }
   }
 
-  #createWinnerPointer(): void {
+  private createWinnerPointer(): void {
     const winnerPointer: Mesh = new Mesh('winnerPointer', this.scene);
     const winnerPointerBorder: Mesh = new Mesh('winnerPointer', this.scene);
     const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
@@ -204,11 +204,11 @@ export class Wheel {
     winnerPointerBorder.material = winnerPointerBorderMaterial;
   }
 
-  #resizeEvent(): void {
+  private resizeEvent(): void {
     this.engine.resize();
   }
 
-  shuffleNames(): void {
+  private shuffleNames(): void {
     shuffleArrayInPlace(this.wheelOptions);
   }
 
