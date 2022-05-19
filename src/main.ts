@@ -18,7 +18,7 @@ window.addEventListener('DOMContentLoaded', (): void => {
 
   help.initialize();
 
-  canvas.addEventListener('pointerup', async (): Promise<void> => {
+  async function spinWheel() {
     if (winnerDiv) winnerDiv.style.display = 'none';
     if (fireworkDiv) fireworkDiv.style.display = 'none';
     if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
@@ -39,5 +39,9 @@ window.addEventListener('DOMContentLoaded', (): void => {
       clickToSpinDiv.style.top = 'calc(50% - 50px)';
       clickToSpinDiv.style.display = 'flex';
     }
-  });
+  }
+
+  canvas.addEventListener('pointerup', spinWheel);
+  clickToSpinDiv.addEventListener('pointerup', spinWheel);
+  winnerDiv.addEventListener('pointerup', spinWheel);
 });
