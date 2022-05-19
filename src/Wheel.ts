@@ -1,17 +1,18 @@
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
-import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
+import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
+import { CreateDisc } from '@babylonjs/core/Meshes/Builders/discBuilder';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
-import { Vector3 } from '@babylonjs/core/Maths/math';
-import { Color3 } from '@babylonjs/core/Maths/math';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { Space } from '@babylonjs/core/Maths/math.axis';
-import { Texture } from '@babylonjs/core/Materials/Textures/texture';
-import type { Mesh } from '@babylonjs/core/Meshes/mesh';
-import '@babylonjs/core/Materials/standardMaterial';
+import { Texture, Space } from './constants';
 import { update as TweenUpdate, Tween } from '@tweenjs/tween.js';
+
+import type { Mesh } from '@babylonjs/core/Meshes/mesh';
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output = [];
@@ -59,7 +60,7 @@ export class Wheel {
     this.isSpinning = false;
 
     this.engine = new Engine(this.canvas, true);
-    this.scene = new Scene(this.engine);;
+    this.scene = new Scene(this.engine);
     this.camera = new ArcRotateCamera('camera', Math.PI / 2, 0, 2, new Vector3(0, 0, 0), this.scene);
     this.transformNode = new TransformNode('transformNode', this.scene);
     this.colors = makeColorGradient(0.9, 0.9, 0.9, 0, 2, 4, 164, 91);
@@ -93,10 +94,10 @@ export class Wheel {
   #createSlices(): void {
     for (let index: number = 0; index < this.wheelOptions.length; ++index) {
       const wheelOption: any = this.wheelOptions[index];
-      const slice: Mesh = MeshBuilder.CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
+      const slice: Mesh = CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
       const sliceColor: StandardMaterial = new StandardMaterial(`material_${wheelOption}`, this.scene);
       const nameTexture: DynamicTexture = new DynamicTexture(`name_${wheelOption}`, { width: 500, height: 50 }, this.scene);
-      const namePlane: Mesh = MeshBuilder.CreatePlane(`name_${wheelOption}`, { width: .5, height: .05 }, this.scene);
+      const namePlane: Mesh = CreatePlane(`name_${wheelOption}`, { width: .5, height: .05 }, this.scene);
       const nameMaterial: StandardMaterial = new StandardMaterial("Mat", this.scene);
       let namePivot: Vector3 = Vector3.Zero();
   
@@ -139,7 +140,7 @@ export class Wheel {
   }
 
   #createWinnerPointer(): void {
-    const winnerPointer: Mesh = MeshBuilder.CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
+    const winnerPointer: Mesh = CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
     const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
   
     winnerPointerMaterial.emissiveColor = Color3.White();
