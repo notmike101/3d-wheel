@@ -92,38 +92,63 @@ export class Wheel {
     this.scene.render();
   }
 
+  #createPeg(offset: number = 0, parent: any = null): void {
+    const peg: Mesh = CreateCylinder('peg', { height: 1 }, this.scene);
+
+    peg.scaling.x = 0.01;
+    peg.scaling.y = 0.01;
+    peg.scaling.z = 0.01;
+    peg.position.x = 0.49;
+    peg.position.y = 0.01;
+
+    peg.setPivotPoint(new Vector3(0, peg.position.y, 0), Space.WORLD);
+
+    peg.position.x -= peg.getPivotPoint().x * 0.99;
+    peg.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * offset;
+
+    if (parent) {
+      peg.parent = parent;
+    }
+  }
+
+  #createName(name: string = '', offset: number = 0, parent: any = null): void {
+    const nameTexture: DynamicTexture = new DynamicTexture(`name_${name}`, { width: 500, height: 50 }, this.scene);
+    const namePlane: Mesh = CreatePlane(`name_${name}`, { width: .5, height: .05 }, this.scene);
+    const nameMaterial: StandardMaterial = new StandardMaterial("Mat", this.scene);
+
+    nameTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
+    nameTexture.hasAlpha = true;
+    nameTexture.anisotropicFilteringLevel = 16;
+    nameTexture.drawText(name, 50, null, '32px Arial', "#000000", null, true);
+    nameTexture.update();
+
+    nameMaterial.alphaMode = Engine.ALPHA_COMBINE;
+    nameMaterial.useAlphaFromDiffuseTexture = true;
+    nameMaterial.diffuseTexture = nameTexture;
+    nameMaterial.ambientColor = new Color3(1, 1, 1);
+
+    namePlane.material = nameMaterial;
+    namePlane.rotation.x = Math.PI / 2;
+    namePlane.position.y = 0.006;
+    namePlane.position.x = 0.25;
+    namePlane.scaling.y = -1;
+    namePlane.scaling.x = -1;
+    
+    namePlane.setPivotPoint(new Vector3(0, namePlane.position.y, 0), Space.WORLD);
+      
+    namePlane.position.x -= namePlane.getPivotPoint().x * 2;
+    namePlane.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * offset;
+    
+    if (parent) {
+      namePlane.parent = parent;
+    }
+  }
+
   #createSlices(): void {
     for (let index: number = 0; index < this.wheelOptions.length; ++index) {
       const wheelOption: string = this.wheelOptions[index];
       const slice: Mesh = CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
-      const slicePeg: Mesh = CreateCylinder(`cylendar_${wheelOption}_peg`, { height: 1 }, this.scene);
       const sliceColor: StandardMaterial = new StandardMaterial(`material_${wheelOption}`, this.scene);
-      const nameTexture: DynamicTexture = new DynamicTexture(`name_${wheelOption}`, { width: 500, height: 50 }, this.scene);
-      const namePlane: Mesh = CreatePlane(`name_${wheelOption}`, { width: .5, height: .05 }, this.scene);
-      const nameMaterial: StandardMaterial = new StandardMaterial("Mat", this.scene);
-  
-      nameTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
-      nameTexture.hasAlpha = true;
-      nameTexture.anisotropicFilteringLevel = 16;
-      nameTexture.drawText(wheelOption, 50, null, '32px Arial', "#000000", null, true);
-      nameTexture.update();
-  
-      nameMaterial.alphaMode = Engine.ALPHA_COMBINE;
-      nameMaterial.useAlphaFromDiffuseTexture = true;
-      nameMaterial.diffuseTexture = nameTexture;
-      nameMaterial.ambientColor = new Color3(1, 1, 1);
-
-      namePlane.material = nameMaterial;
-      namePlane.rotation.x = Math.PI / 2;
-      namePlane.position.y = 0.006;
-      namePlane.position.x = 0.25;
-      namePlane.scaling.y = -1;
-      namePlane.scaling.x = -1;
-      
-      namePlane.setPivotPoint(new Vector3(0, namePlane.position.y, 0), Space.WORLD);
-        
-      namePlane.position.x -= namePlane.getPivotPoint().x * 2;
-      namePlane.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * index;
   
       sliceColor.emissiveColor = this.colors[index];
       sliceColor.diffuseColor = Color3.Black();
@@ -131,25 +156,13 @@ export class Wheel {
       slice.material = sliceColor;
       slice.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * (index + 0.5);
 
-      slicePeg.scaling.x = 0.01;
-      slicePeg.scaling.y = 0.01;
-      slicePeg.scaling.z = 0.01;
-      slicePeg.position.x = 0.49;
-      slicePeg.position.y = 0.01;
+      this.#createName(wheelOption, index, this.transformNode);
+      this.#createPeg(index, this.transformNode);
 
-      slicePeg.setPivotPoint(new Vector3(0, slicePeg.position.y, 0), Space.WORLD);
-
-      slicePeg.position.x -= slicePeg.getPivotPoint().x * 0.99;
-      slicePeg.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * index;
-
-      slicePeg.parent = this.transformNode;
       slice.parent = this.transformNode;
-      namePlane.parent = this.transformNode;
     }
   }
 
-  // This needs to be fixed...
-  // Best solution is to create a flat triangle at a higher Y position than the wheel
   #createWinnerPointer(): void {
     const winnerPointer: Mesh = new Mesh('winnerPointer', this.scene);
     const winnerPointerBorder: Mesh = new Mesh('winnerPointer', this.scene);
@@ -189,16 +202,6 @@ export class Wheel {
     winnerPointerBorderMaterial.emissiveColor = Color3.Black();
     winnerPointer.material = winnerPointerMaterial;
     winnerPointerBorder.material = winnerPointerBorderMaterial;
-    
-    // const winnerPointer: Mesh = CreateDisc(`winnerPointer`, { tessellation: 3, updatable: true }, this.scene);
-    // const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
-  
-    // winnerPointerMaterial.emissiveColor = Color3.White();
-  
-    // winnerPointer.position.set(0.52, 0.009, 0);
-    // winnerPointer.rotation.set(Math.PI / 2, Math.PI, 0);
-    // winnerPointer.scaling.set(0.08, 0.03, 0);
-    // winnerPointer.material = winnerPointerMaterial;
   }
 
   #resizeEvent(): void {
