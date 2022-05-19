@@ -23,25 +23,37 @@ window.addEventListener('DOMContentLoaded', (): void => {
     
     help.enabled = false;
 
-    const winner: string = await wheel.spin();
+    try {
+      const winner: string | void = await wheel.spin();
 
-    if (winnerDiv) {
-      winnerDiv.style.display = 'block';
-      winnerDiv.textContent = `${winner} wins!`
-    }
+      if (winnerDiv) {
+        winnerDiv.style.display = 'block';
+        winnerDiv.textContent = `${winner} wins!`
+      }
 
-    if (fireworkDiv) {
-      fireworkDiv.style.display = 'block';
-    }
+      if (fireworkDiv) {
+        fireworkDiv.style.display = 'block';
+      }
 
-    if (clickToSpinDiv) {
-      clickToSpinDiv.textContent = 'Click to spin again!';
-      clickToSpinDiv.style.top = 'calc(50% - 50px)';
-      clickToSpinDiv.style.display = 'flex';
+      if (clickToSpinDiv) {
+        clickToSpinDiv.textContent = 'Click to spin again!';
+        clickToSpinDiv.style.top = 'calc(50% - 50px)';
+        clickToSpinDiv.style.display = 'flex';
+      }
+    } catch (err) {
+      console.warn(err);
     }
 
     help.enabled = true;
   }
+
+  window.addEventListener('hashchange', () => {
+    try {
+      wheel.updateWheelItems(parseHash());
+    } catch (err) {
+      console.warn(err);
+    }
+  });
 
   canvas.addEventListener('pointerup', spinWheel);
   clickToSpinDiv.addEventListener('pointerup', spinWheel);

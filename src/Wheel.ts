@@ -1,3 +1,4 @@
+import '@babylonjs/core/Materials/Textures/rawTexture';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
@@ -42,20 +43,20 @@ export class Wheel {
   private engine: Engine;
   private scene: Scene;
   private camera: ArcRotateCamera;
-  private wheelOptions: string[];
+  private wheelItems: string[];
   private transformNode: TransformNode;
   private colors: Color3[];
   private sizeOfSlice: number;
   private spinBeforeInteraction: Tween<any>;
   private isSpinning: boolean;
 
-  constructor(canvas: HTMLCanvasElement, wheelOptions: string[] = []) {
+  constructor(canvas: HTMLCanvasElement, wheelItems: string[] = []) {
     if (!canvas) throw new Error('No canvas provided');
-    if (wheelOptions.length === 0) throw new Error('No wheel options provided');
+    if (wheelItems.length === 0) throw new Error('No wheel options provided');
 
     this.canvas = canvas;
-    this.wheelOptions = wheelOptions;
-    this.sizeOfSlice = 1 / wheelOptions.length;
+    this.wheelItems = [];
+    this.sizeOfSlice = 0;
     this.isSpinning = false;
 
     this.engine = new Engine(this.canvas, true);
@@ -66,17 +67,11 @@ export class Wheel {
 
     // this.camera.attachControl(this.canvas, true);
 
+    (window as any).scene = this.scene;
+
     this.spinBeforeInteraction = new Tween(this.transformNode.rotation)
       .to({ y: this.transformNode.rotation.y + Math.PI * 2 }, 100000)
       .repeat(Infinity);
-
-    this.initialize();
-  }
-
-  protected initialize(): void {
-    this.shuffleNames();
-    this.createSlices();
-    this.createWinnerPointer();
 
     this.engine.runRenderLoop(this.renderLoop.bind(this));
 
@@ -84,31 +79,12 @@ export class Wheel {
   
     window.addEventListener('resize', this.resizeEvent.bind(this));
 
-    this.spinBeforeInteraction.start();
+    this.updateWheelItems(wheelItems);
   }
 
   private renderLoop(): void {
     TweenUpdate(performance.now());
     this.scene.render();
-  }
-
-  private createPeg(offset: number = 0, parent: any = null): void {
-    const peg: Mesh = CreateCylinder('peg', { height: 1 }, this.scene);
-
-    peg.scaling.x = 0.01;
-    peg.scaling.y = 0.01;
-    peg.scaling.z = 0.01;
-    peg.position.x = 0.49;
-    peg.position.y = 0.01;
-
-    peg.setPivotPoint(new Vector3(0, peg.position.y, 0), Space.WORLD);
-
-    peg.position.x -= peg.getPivotPoint().x * 0.99;
-    peg.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * offset;
-
-    if (parent) {
-      peg.parent = parent;
-    }
   }
 
   private createName(name: string = '', offset: number = 0, parent: any = null): void {
@@ -145,8 +121,8 @@ export class Wheel {
   }
 
   private createSlices(): void {
-    for (let index: number = 0; index < this.wheelOptions.length; ++index) {
-      const wheelOption: string = this.wheelOptions[index];
+    for (let index: number = 0; index < this.wheelItems.length; ++index) {
+      const wheelOption: string = this.wheelItems[index];
       const slice: Mesh = CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
       const sliceColor: StandardMaterial = new StandardMaterial(`material_${wheelOption}`, this.scene);
   
@@ -157,7 +133,6 @@ export class Wheel {
       slice.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * (index + 0.5);
 
       this.createName(wheelOption, index, this.transformNode);
-      // this.createPeg(index, this.transformNode);
 
       slice.parent = this.transformNode;
     }
@@ -208,11 +183,34 @@ export class Wheel {
     this.engine.resize();
   }
 
-  private shuffleNames(): void {
-    shuffleArrayInPlace(this.wheelOptions);
+  public updateWheelItems(wheelItems: string[] = []): void {
+    if (this.isSpinning === true) throw new Error('Wheel is spinning');
+    if (wheelItems.length === 0) throw new Error('No wheel options provided');
+
+    this.isSpinning = false;
+
+    for (const mesh of this.scene.meshes) {
+      mesh.dispose();
+    }
+
+    for (const material of this.scene.materials) {
+      material.dispose();
+    }
+
+    for (const texture of this.scene.textures) {
+      texture.dispose();
+    }
+
+    this.wheelItems = wheelItems;
+    this.sizeOfSlice = 1 / wheelItems.length;
+
+    shuffleArrayInPlace(this.wheelItems);
+
+    this.createSlices();
+    this.createWinnerPointer();
   }
 
-  spin(): Promise<string> {
+  public spin(): Promise<string | void> {
     return new Promise((resolve, reject) => {
       if (this.isSpinning) return reject('Wheel is already spinning');
 
@@ -227,11 +225,16 @@ export class Wheel {
           const sliceArcWidth: number = ((Math.PI * 2) * this.sizeOfSlice);
           const finalAngleOfRotation: number = (y-sliceArcWidth / 2) % (Math.PI * 2);
           const winningSlot: number = finalAngleOfRotation / sliceArcWidth;
-          const fixWinningSlot: number = Math.floor(this.wheelOptions.length-winningSlot) % this.wheelOptions.length;
+          const fixWinningSlot: number = Math.floor(this.wheelItems.length-winningSlot) % this.wheelItems.length;
 
           this.isSpinning = false;
 
-          resolve(this.wheelOptions[fixWinningSlot]);
+          resolve(this.wheelItems[fixWinningSlot]);
+        })
+        .onStop(() => {
+          this.transformNode.rotation.y = 0;
+          this.isSpinning = false;
+          reject();
         })
         .start();
     });
