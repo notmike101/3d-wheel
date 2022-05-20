@@ -13,6 +13,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { update as TweenUpdate, Tween } from '@tweenjs/tween.js';
 import { Texture, Space } from './constants';
+import { Axis } from '@babylonjs/core/Maths/math.axis';
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output = [];
@@ -89,9 +90,9 @@ export class Wheel {
   }
 
   private createName(name: string = '', offset: number = 0, parent: any = null): void {
-    const nameTexture: DynamicTexture = new DynamicTexture(`name_${name}`, { width: 500, height: 50 }, this.scene);
-    const namePlane: Mesh = CreatePlane(`name_${name}`, { width: .5, height: .05 }, this.scene);
-    const nameMaterial: StandardMaterial = new StandardMaterial("Mat", this.scene);
+    const nameTexture: DynamicTexture = new DynamicTexture(`nametexture_${name}`, { width: 500, height: 50 }, this.scene);
+    const namePlane: Mesh = CreatePlane(`namemesh_${name}`, { width: .5, height: .05 }, this.scene);
+    const nameMaterial: StandardMaterial = new StandardMaterial(`namematerial_${name}`, this.scene);
 
     nameTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
     nameTexture.hasAlpha = true;
@@ -99,23 +100,31 @@ export class Wheel {
     nameTexture.drawText(name, 50, null, '32px Arial', "#000000", null, true);
     nameTexture.update();
 
-    nameMaterial.alphaMode = Engine.ALPHA_COMBINE;
+    //nameMaterial.alphaMode = Engine.ALPHA_COMBINE;
     nameMaterial.useAlphaFromDiffuseTexture = true;
     nameMaterial.diffuseTexture = nameTexture;
-    nameMaterial.ambientColor = new Color3(1, 1, 1);
+    //nameMaterial.ambientColor = new Color3(1, 1, 1);
 
     namePlane.material = nameMaterial;
     namePlane.rotation.x = Math.PI / 2;
     namePlane.position.y = 0.006;
-    namePlane.position.x = 0.25;
+    namePlane.position.z = 0;
     namePlane.scaling.y = -1;
     namePlane.scaling.x = -1;
     
-    namePlane.setPivotPoint(new Vector3(0, namePlane.position.y, 0), Space.WORLD);
-      
-    namePlane.position.x -= namePlane.getPivotPoint().x * 2;
-    namePlane.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * offset;
+    console.log(namePlane.position._x, namePlane.position._y, namePlane.position._z);
+    namePlane.position = new Vector3(0, namePlane.position.y, 0);
+    //namePlane.setPivotPoint(new Vector3(0, namePlane.position.y, 0), Space.WORLD);
+    //console.log(this.wheelItems.length, this.sizeOfSlice, namePlane.getPivotPoint());
+
     
+    namePlane.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * offset;
+    namePlane.translate(Axis.X, -0.25, Space.LOCAL);
+
+    // this.scene.registerBeforeRender(() => {
+    //   namePlane.rotation.y += 0.01;
+    // });
+
     if (parent) {
       namePlane.parent = parent;
     }
@@ -184,23 +193,21 @@ export class Wheel {
     this.engine.resize();
   }
 
+
+  // Clear all meshes from the scene and from memory
+  public newScene() {
+    for(let i = this.scene.meshes.length - 1; i>=0; i--) {
+      this.scene.meshes[i].dispose();
+    }
+  }
+
   public updateWheelItems(wheelItems: string[] = []): void {
     if (this.isSpinning === true) throw new Error('Wheel is spinning');
     if (wheelItems.length === 0) throw new Error('No wheel options provided');
 
     this.isSpinning = false;
 
-    for (const mesh of this.scene.meshes) {
-      mesh.dispose();
-    }
-
-    for (const material of this.scene.materials) {
-      material.dispose();
-    }
-
-    for (const texture of this.scene.textures) {
-      texture.dispose();
-    }
+    this.newScene();
 
     this.wheelItems = wheelItems;
     this.sizeOfSlice = 1 / wheelItems.length;

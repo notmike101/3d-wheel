@@ -3,6 +3,7 @@ export const Texture = Object.freeze({
 });
 
 export const Space = Object.freeze({
+  LOCAL: 0,
   WORLD: 1,
 });
 
