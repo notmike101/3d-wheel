@@ -71,7 +71,8 @@ export class Wheel {
 
     this.spinBeforeInteraction = new Tween(this.transformNode.rotation)
       .to({ y: this.transformNode.rotation.y + Math.PI * 2 }, 100000)
-      .repeat(Infinity);
+      .repeat(Infinity)
+      .start();
 
     this.engine.runRenderLoop(this.renderLoop.bind(this));
 
