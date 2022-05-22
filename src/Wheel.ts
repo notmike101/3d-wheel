@@ -100,10 +100,8 @@ export class Wheel {
     nameTexture.drawText(name, 50, null, '32px Arial', "#000000", null, true);
     nameTexture.update();
 
-    //nameMaterial.alphaMode = Engine.ALPHA_COMBINE;
     nameMaterial.useAlphaFromDiffuseTexture = true;
     nameMaterial.diffuseTexture = nameTexture;
-    //nameMaterial.ambientColor = new Color3(1, 1, 1);
 
     namePlane.material = nameMaterial;
     namePlane.rotation.x = Math.PI / 2;
@@ -112,18 +110,10 @@ export class Wheel {
     namePlane.scaling.y = -1;
     namePlane.scaling.x = -1;
     
-    console.log(namePlane.position._x, namePlane.position._y, namePlane.position._z);
     namePlane.position = new Vector3(0, namePlane.position.y, 0);
-    //namePlane.setPivotPoint(new Vector3(0, namePlane.position.y, 0), Space.WORLD);
-    //console.log(this.wheelItems.length, this.sizeOfSlice, namePlane.getPivotPoint());
-
-    
     namePlane.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * offset;
     namePlane.translate(Axis.X, -0.25, Space.LOCAL);
-
-    // this.scene.registerBeforeRender(() => {
-    //   namePlane.rotation.y += 0.01;
-    // });
+    namePlane.markAsDirty();
 
     if (parent) {
       namePlane.parent = parent;
