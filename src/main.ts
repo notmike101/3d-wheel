@@ -1,5 +1,5 @@
 import { Wheel } from './Wheel';
-import { Help } from './Help';
+import { IconController } from './IconController';
 
 import './style.scss';
 
@@ -14,14 +14,14 @@ window.addEventListener('DOMContentLoaded', (): void => {
   const clickToSpinDiv: HTMLDivElement = document.getElementById('clickToSpin') as HTMLDivElement;
   const wheelOptions: string[] = parseHash();
   const wheel: Wheel = new Wheel(canvas, wheelOptions);
-  const help: Help = new Help();
+  const iconController: IconController = new IconController(document.getElementById('icons') as HTMLDivElement);
 
   async function spinWheel() {
     if (winnerDiv) winnerDiv.style.display = 'none';
     if (fireworkDiv) fireworkDiv.style.display = 'none';
     if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
     
-    help.enabled = false;
+    iconController.isVisible = false;
 
     try {
       const winner: string | void = await wheel.spin();
@@ -44,7 +44,7 @@ window.addEventListener('DOMContentLoaded', (): void => {
       console.warn(err);
     }
 
-    help.enabled = true;
+    iconController.isVisible = true;
   }
 
   window.addEventListener('hashchange', () => {

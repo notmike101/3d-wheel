@@ -10,11 +10,24 @@
     <div id="clickToSpin">Click to spin!</div>
     <canvas id="renderCanvas"></canvas>
     <div id="winner"></div>
+    <div id="icons">
+      <div id="help-icon" class="icon fa-solid fa-info" data-modalid="help"></div>
+      <div id="edit-icon" class="icon fa-solid fa-pen-to-square" data-modalid="editor"></div>
+    </div>
+    <dialog id="help" class="modal">
+      <div id="help-close" class="close-icon fa-solid fa-xmark"></div>
+      <div class="inner"></div>
+    </dialog>
+    <dialog id="editor" class="modal">
+      <div id="editor-close" class="close-icon fa-solid fa-xmark"></div>
+      <div class="inner"></div>
+    </dialog>
     <div class="pyro" id="fireworks">
       <div class="before"></div>
       <div class="after"></div>
     </div>
 
     <script type="module" src="./src/main.ts"></script>
+    <script src="https://kit.fontawesome.com/0a83a914f5.js" crossorigin="anonymous"></script>
   </body>
 </html>
