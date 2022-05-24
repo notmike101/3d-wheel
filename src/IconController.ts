@@ -62,6 +62,7 @@ class EditorIcon extends Icon {
     super(iconElement);
 
     this.input = document.createElement('textarea');
+    this.input.setAttribute('placeholder', 'Enter wheel items here, one per line');
     this.input.textContent = this.hashItems.join('\n');
 
     this.input.addEventListener('input', this.handleTextareaChange.bind(this));
