@@ -68,8 +68,6 @@ export class Wheel {
 
     // this.camera.attachControl(this.canvas, true);
 
-    (window as any).scene = this.scene;
-
     this.spinBeforeInteraction = new Tween(this.transformNode.rotation)
       .to({ y: this.transformNode.rotation.y + Math.PI * 2 }, 100000)
       .repeat(Infinity)
