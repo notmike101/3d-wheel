@@ -1,4 +1,3 @@
-import '@babylonjs/core/Materials/Textures/rawTexture';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
