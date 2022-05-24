@@ -69,8 +69,8 @@ export class Wheel {
     this.camera = new ArcRotateCamera('camera', Math.PI / 2, 0, 2, new Vector3(0, 0, 0), this.scene);
     this.transformNode = new TransformNode('transformNode', this.scene);
     this.colors = makeColorGradient(0.9, 0.9, 0.9, 0, 2, 4, 164, 91);
-    this.clickHigh = new Sound('ClickHigh', '/media/click_high.wav', this.scene);
-    this.clickLow = new Sound('ClickLow', '/media/click_low.wav', this.scene);
+    this.clickHigh = new Sound('ClickHigh', './media/click_high.wav', this.scene);
+    this.clickLow = new Sound('ClickLow', './media/click_low.wav', this.scene);
 
     // this.camera.attachControl(this.canvas, true);
 
