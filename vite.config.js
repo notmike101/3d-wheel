@@ -7,6 +7,11 @@ export default defineConfig(({ mode }) => ({
       mode: Mode.HTML,
     })
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   base: mode === 'development' ? '/' : '/3d-wheel/',
   build: {
     minify: 'terser',

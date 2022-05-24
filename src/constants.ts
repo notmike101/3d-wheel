@@ -7,7 +7,7 @@ export const Space = Object.freeze({
   WORLD: 1,
 });
 
-export default { 
+export default Object.freeze({ 
   Texture,
   Space,
-};
+});

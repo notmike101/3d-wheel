@@ -16,12 +16,12 @@ import { Texture, Space } from './constants';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
-  const output = [];
+  const output: Color3[] = [];
 
-  for (let i = 0; i < len; ++i) {
-    const red = Math.sin(frequency1 * i + phase1) * width + center;
-    const grn = Math.sin(frequency2 * i + phase2) * width + center;
-    const blu = Math.sin(frequency3 * i + phase3) * width + center;
+  for (let i: number = 0; i < len; i += 1) {
+    const red: number = Math.sin(frequency1 * i + phase1) * width + center;
+    const grn: number = Math.sin(frequency2 * i + phase2) * width + center;
+    const blu: number = Math.sin(frequency3 * i + phase3) * width + center;
 
     output.push(new Color3(red/255, grn/255, blu/255));
   }
@@ -30,9 +30,9 @@ function makeColorGradient(frequency1: number, frequency2: number, frequency3: n
 }
 
 function shuffleArrayInPlace(target: any[]): void {
-  for (let i = target.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = target[i];
+  for (let i: number = target.length - 1; i > 0; i -= 1) {
+    const j: number = Math.floor(Math.random() * (i + 1));
+    const temp: any = target[i];
 
     target[i] = target[j];
     target[j] = temp;
@@ -142,7 +142,7 @@ export class Wheel {
     const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
     const winnerPointerBorderMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
 
-    const winnerPointerVertexData = new VertexData();
+    const winnerPointerVertexData: VertexData = new VertexData();
 
     winnerPointerVertexData.positions = [
       3, 0, -2,
@@ -183,8 +183,8 @@ export class Wheel {
 
 
   // Clear all meshes from the scene and from memory
-  public newScene() {
-    for(let i = this.scene.meshes.length - 1; i>=0; i--) {
+  public newScene(): void {
+    for (let i: number = this.scene.meshes.length - 1; i >= 0; i -= 1) {
       this.scene.meshes[i].dispose();
     }
   }
@@ -216,7 +216,7 @@ export class Wheel {
 
       new Tween(this.transformNode.rotation)
         .to({ y: this.transformNode.rotation.y + 30 }, 8000)
-        .easing(x=> x<.279?2**(10*x-3.8)-0.0717936471873147:1.2-2**(-10*(x-.2))-0.19609374999999996)
+        .easing((x) => x<.279?2**(10*x-3.8)-0.0717936471873147:1.2-2**(-10*(x-.2))-0.19609374999999996)
         .onComplete(({ y }) => {
           const sliceArcWidth: number = ((Math.PI * 2) * this.sizeOfSlice);
           const finalAngleOfRotation: number = (y-sliceArcWidth / 2) % (Math.PI * 2);
@@ -230,6 +230,7 @@ export class Wheel {
         .onStop(() => {
           this.transformNode.rotation.y = 0;
           this.isSpinning = false;
+
           reject();
         })
         .start();

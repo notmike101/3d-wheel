@@ -16,7 +16,7 @@ window.addEventListener('DOMContentLoaded', (): void => {
   const wheel: Wheel = new Wheel(canvas, wheelOptions);
   const iconController: IconController = new IconController(document.getElementById('icons') as HTMLDivElement);
 
-  async function spinWheel() {
+  async function spinWheel(): Promise<void> {
     if (winnerDiv) winnerDiv.style.display = 'none';
     if (fireworkDiv) fireworkDiv.style.display = 'none';
     if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
@@ -47,7 +47,7 @@ window.addEventListener('DOMContentLoaded', (): void => {
     iconController.isVisible = true;
   }
 
-  window.addEventListener('hashchange', () => {
+  window.addEventListener('hashchange', (): void => {
     try {
       wheel.updateWheelItems(parseHash());
     } catch (err) {
