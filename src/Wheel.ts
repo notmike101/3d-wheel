@@ -1,3 +1,5 @@
+import '@babylonjs/core/Audio/audioSceneComponent';
+
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
@@ -13,6 +15,7 @@ import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { update as TweenUpdate, Tween } from '@tweenjs/tween.js';
 import { Texture, Space } from './constants';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
+import { Sound } from '@babylonjs/core/Audio/sound';
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output: Color3[] = [];
@@ -49,6 +52,8 @@ export class Wheel {
   private sizeOfSlice: number;
   private spinBeforeInteraction: Tween<any>;
   private isSpinning: boolean;
+  private clickHigh: Sound;
+  private clickLow: Sound;
 
   constructor(canvas: HTMLCanvasElement, wheelItems: string[] = []) {
     if (!canvas) throw new Error('No canvas provided');
@@ -64,6 +69,8 @@ export class Wheel {
     this.camera = new ArcRotateCamera('camera', Math.PI / 2, 0, 2, new Vector3(0, 0, 0), this.scene);
     this.transformNode = new TransformNode('transformNode', this.scene);
     this.colors = makeColorGradient(0.9, 0.9, 0.9, 0, 2, 4, 164, 91);
+    this.clickHigh = new Sound('ClickHigh', '/media/click_high.wav', this.scene);
+    this.clickLow = new Sound('ClickLow', '/media/click_low.wav', this.scene);
 
     // this.camera.attachControl(this.canvas, true);
 
@@ -213,20 +220,35 @@ export class Wheel {
 
       this.isSpinning = true;
 
+      let lastWholeRotation: number = 0;
+
       new Tween(this.transformNode.rotation)
-        .to({ y: this.transformNode.rotation.y + 30 }, 8000)
-        .easing((x) => x<.279?2**(10*x-3.8)-0.0717936471873147:1.2-2**(-10*(x-.2))-0.19609374999999996)
-        .onComplete(({ y }) => {
+        .to({ y: this.transformNode.rotation.y + 100 }, 8000)
+        .easing((x: number) => x<.279?2**(10*x-3.8)-0.0717936471873147:1.2-2**(-10*(x-.2))-0.19609374999999996)
+        .onComplete(({ y }): void => {
           const sliceArcWidth: number = ((Math.PI * 2) * this.sizeOfSlice);
           const finalAngleOfRotation: number = (y-sliceArcWidth / 2) % (Math.PI * 2);
           const winningSlot: number = finalAngleOfRotation / sliceArcWidth;
-          const fixWinningSlot: number = Math.floor(this.wheelItems.length-winningSlot) % this.wheelItems.length;
+          const fixWinningSlot: number = Math.floor(this.wheelItems.length - winningSlot) % this.wheelItems.length;
 
           this.isSpinning = false;
 
           resolve(this.wheelItems[fixWinningSlot]);
         })
-        .onStop(() => {
+        .onUpdate(({ y }) => {
+          const wholeY = Math.floor(y);
+
+          if (wholeY !== lastWholeRotation) {
+            lastWholeRotation = wholeY;
+
+            if (wholeY % 4 === 0) {
+              this.clickHigh.play();
+            } else {
+              this.clickLow.play();
+            }
+          }
+        })
+        .onStop((): void => {
           this.transformNode.rotation.y = 0;
           this.isSpinning = false;
 
