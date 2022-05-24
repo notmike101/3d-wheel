@@ -236,7 +236,7 @@ export class Wheel {
           resolve(this.wheelItems[fixWinningSlot]);
         })
         .onUpdate(({ y }) => {
-          const wholeY = Math.floor(y);
+          const wholeY: number = Math.floor(y);
 
           if (wholeY !== lastWholeRotation) {
             lastWholeRotation = wholeY;
