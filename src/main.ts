@@ -10,7 +10,6 @@ function parseHash(): string[] {
 window.addEventListener('DOMContentLoaded', (): void => {
   const canvas: HTMLCanvasElement = document.getElementById('renderCanvas') as HTMLCanvasElement;
   const winnerDiv: HTMLDivElement = document.getElementById('winner') as HTMLDivElement;
-  const fireworkDiv: HTMLDivElement = document.getElementById('fireworks') as HTMLDivElement;
   const clickToSpinDiv: HTMLDivElement = document.getElementById('clickToSpin') as HTMLDivElement;
   const wheelOptions: string[] = parseHash();
   const wheel: Wheel = new Wheel(canvas, wheelOptions);
@@ -18,7 +17,6 @@ window.addEventListener('DOMContentLoaded', (): void => {
 
   async function spinWheel(): Promise<void> {
     if (winnerDiv) winnerDiv.style.display = 'none';
-    if (fireworkDiv) fireworkDiv.style.display = 'none';
     if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
     
     iconController.isVisible = false;
@@ -29,10 +27,6 @@ window.addEventListener('DOMContentLoaded', (): void => {
       if (winnerDiv) {
         winnerDiv.style.display = 'block';
         winnerDiv.textContent = `${winner} wins!`
-      }
-
-      if (fireworkDiv) {
-        fireworkDiv.style.display = 'block';
       }
 
       if (clickToSpinDiv) {
@@ -55,7 +49,18 @@ window.addEventListener('DOMContentLoaded', (): void => {
     }
   });
 
+  async function documentSpinClickHandler(event: PointerEvent): Promise<void> {
+    if (event.button !== 2) {
+      if (event.target === canvas || event.target === winnerDiv || event.target === clickToSpinDiv) {
+        document.removeEventListener('pointerup', documentSpinClickHandler);
+
+        await spinWheel();
+
+        document.addEventListener('pointerup', documentSpinClickHandler);
+      }
+    }
+  }
+
   // canvas.addEventListener('pointerup', spinWheel);
-  clickToSpinDiv.addEventListener('pointerup', spinWheel);
-  winnerDiv.addEventListener('pointerup', spinWheel);
+  document.addEventListener('pointerup', documentSpinClickHandler);
 });

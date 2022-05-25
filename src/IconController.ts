@@ -1,9 +1,13 @@
 import { HelpIcon, EditorIcon } from './Icons';
 import type { Icon } from './Icons';
 
+interface Icons {
+  [key: string]: Icon;
+}
+
 export class IconController {
   private iconContainer: HTMLDivElement;
-  private icons: {[key: string]: Icon};
+  private icons: Icons;
 
   constructor(iconContainer: HTMLDivElement) {
     this.iconContainer = iconContainer;

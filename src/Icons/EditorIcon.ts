@@ -19,8 +19,8 @@ export class EditorIcon extends Icon {
     return decodeURI(location.hash.substring(1, location.hash.length)).split('|') ?? [];
   }
 
-  handleTextareaChange(): void {
-    const hashItems = this.input.value.split('\n');
+  private handleTextareaChange(): void {
+    const hashItems: string[] = this.input.value.split('\n');
 
     location.hash = hashItems.join('|');
   }

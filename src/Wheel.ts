@@ -22,10 +22,10 @@ function makeColorGradient(frequency1: number, frequency2: number, frequency3: n
 
   for (let i: number = 0; i < len; i += 1) {
     const red: number = Math.sin(frequency1 * i + phase1) * width + center;
-    const grn: number = Math.sin(frequency2 * i + phase2) * width + center;
-    const blu: number = Math.sin(frequency3 * i + phase3) * width + center;
+    const green: number = Math.sin(frequency2 * i + phase2) * width + center;
+    const blue: number = Math.sin(frequency3 * i + phase3) * width + center;
 
-    output.push(new Color3(red/255, grn/255, blu/255));
+    output.push(new Color3(red / 255, green / 255, blue / 255));
   }
 
   return output;
@@ -50,9 +50,12 @@ function easeOutElastic(x: number): number {
     ? 1
     : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
 }
-  
 
-export class Wheel {
+function waitFor(waitTime: number = 0): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, waitTime))
+}
+
+export class Wheel implements WheelInterface {
   private canvas: HTMLCanvasElement;
   private engine: Engine;
   private scene: Scene;
@@ -61,11 +64,13 @@ export class Wheel {
   private transformNode: TransformNode;
   private colors: Color3[];
   private sizeOfSlice: number;
-  private spinBeforeInteraction: Tween<any>;
   private isSpinning: boolean;
   private clickHigh: Sound;
   private clickLow: Sound;
   private flipPointer: Function | null;
+  private currentWinner: number;  
+  private wheelPhysics: WheelPhysics;
+  private spinResolver: any;
 
   constructor(canvas: HTMLCanvasElement, wheelItems: string[] = []) {
     if (!canvas) throw new Error('No canvas provided');
@@ -76,6 +81,14 @@ export class Wheel {
     this.sizeOfSlice = 0;
     this.isSpinning = false;
     this.flipPointer = null;
+    this.currentWinner = -1;
+    this.wheelPhysics = {
+      rotationSpeed: 0.005,
+      rotationAcceleration: 0,
+      friction: 1,
+      rotation: 0,
+    }
+    this.spinResolver = null;
 
     this.engine = new Engine(this.canvas, true);
     this.scene = new Scene(this.engine);
@@ -88,18 +101,49 @@ export class Wheel {
 
     this.camera.attachControl(this.canvas, true);
 
-    this.spinBeforeInteraction = new Tween(this.transformNode.rotation)
-      .to({ y: this.transformNode.rotation.y + Math.PI * 2 }, 100000)
-      .repeat(Infinity)
-      .start();
-
-    this.engine.runRenderLoop(this.renderLoop.bind(this));
-
     this.camera.setTarget(Vector3.Zero());
-  
-    window.addEventListener('resize', this.resizeEvent.bind(this));
 
     this.updateWheelItems(wheelItems);
+
+    (window as any).wheel = this;
+
+    this.engine.runRenderLoop(this.renderLoop.bind(this));
+    this.scene.registerBeforeRender(this.wheelUpdate.bind(this));
+    window.addEventListener('resize', this.resizeEvent.bind(this));
+    document.addEventListener('click', () => Engine.audioEngine!.audioContext!.resume());
+  }
+
+  private wheelUpdate(): void {
+    // Update physics (scaled by frame delta time)
+    this.wheelPhysics.rotationSpeed += this.wheelPhysics.rotationAcceleration * this.scene.getAnimationRatio();
+
+    // how much to remove from current rotation speed
+    const frictionSpeedChange = this.wheelPhysics.rotationSpeed - (this.wheelPhysics.rotationSpeed * this.wheelPhysics.friction)
+    this.wheelPhysics.rotationSpeed -= frictionSpeedChange * this.scene.getAnimationRatio();
+    this.wheelPhysics.rotation += this.wheelPhysics.rotationSpeed * this.scene.getAnimationRatio();
+    this.transformNode.rotation.y = this.wheelPhysics.rotation;
+
+    if (this.wheelPhysics.rotationSpeed && this.wheelPhysics.rotationSpeed < 0.0005) {
+      this.wheelPhysics.rotationSpeed = 0;
+      // resolve spin promise
+      if (this.spinResolver) {
+        this.spinResolver();
+      }
+    }
+    
+    // Calculate winner and play sounds if needed
+    let tempWinner = this.getCurrentWinner();
+    if (tempWinner !== this.currentWinner) {
+      this.currentWinner = tempWinner;
+      
+      if (Math.round(Math.random()) === 0) {
+        this.clickHigh.play();
+      } else {
+        this.clickLow.play();
+      }
+
+      if (this.flipPointer) this.flipPointer(1);
+    }
   }
 
   private renderLoop(): void {
@@ -109,9 +153,10 @@ export class Wheel {
 
   private createNotch(offset: number = 0): void {
     const notch: Mesh = CreateCylinder('notch', { height: 0.025, diameterTop: 0.01, diameterBottom: 0.01 }, this.scene);
-    
+    const isEven = this.wheelItems.length % 2 === 0;
+
     notch.position.y += 0.0125;
-    notch.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * offset;
+    notch.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * (offset + (isEven ? 0.5 : 0));
 
     notch.markAsDirty();
     notch.translate(Axis.X, -0.495, Space.LOCAL);
@@ -127,7 +172,7 @@ export class Wheel {
     nameTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
     nameTexture.hasAlpha = true;
     nameTexture.anisotropicFilteringLevel = 16;
-    nameTexture.drawText(name, 50, null, '32px Arial', "#000000", null, true);
+    nameTexture.drawText(name, 50, null, '34px Verdana', "#000000", null, true);
     nameTexture.update();
 
     nameMaterial.useAlphaFromDiffuseTexture = true;
@@ -204,14 +249,12 @@ export class Wheel {
     winnerPointer.material = winnerPointerMaterial;
     winnerPointerBorder.material = winnerPointerBorderMaterial;
 
-    this.flipPointer = ((velocity: number): void => {
+    this.flipPointer = ((): void => {
       new Tween(winnerPointer.rotation)
-        .to({ y: [-Math.PI / 1.28, -Math.PI / 2] }, 1000 / velocity)
+        .to({ y: [-Math.PI / 1.5, -Math.PI / 2] }, 1000)
         .easing(easeOutElastic)
         .start();
     }).bind(this);
-    
-    (window as any).flipPointer = this.flipPointer;
   }
 
   private resizeEvent(): void {
@@ -219,7 +262,7 @@ export class Wheel {
   }
 
   // Clear all meshes from the scene and from memory
-  public newScene(): void {
+  private newScene(): void {
     for (let i: number = this.scene.meshes.length - 1; i >= 0; i -= 1) {
       this.scene.meshes[i].dispose();
     }
@@ -242,49 +285,37 @@ export class Wheel {
     this.createWinnerPointer();
   }
 
-  public spin(): Promise<string | void> {
-    return new Promise((resolve, reject): void => {
-      if (this.isSpinning) return reject('Wheel is already spinning');
+  // Returns who would be winning based on where the pointer is pointing
+  public getCurrentWinner(): number {
+    const sliceArcWidth: number = ((Math.PI * 2) * this.sizeOfSlice);
+    const finalAngleOfRotation: number = (this.transformNode.rotation.y - sliceArcWidth / 2) % (Math.PI * 2);
+    const winningSlot: number = finalAngleOfRotation / sliceArcWidth;
+    const fixWinningSlot: number = Math.floor(this.wheelItems.length - winningSlot) % this.wheelItems.length;
 
-      this.spinBeforeInteraction.stop();
+    return fixWinningSlot;
+  }
 
-      this.isSpinning = true;
+  public async spin(): Promise<string | void> {
+    console.time('spinTime');
 
-      let lastWholeRotation: number = 0;
-
-      new Tween(this.transformNode.rotation)
-        .to({ y: this.transformNode.rotation.y + 100 }, 8000)
-        .easing((x: number) => x<.279?2**(10*x-3.8)-0.0717936471873147:1.2-2**(-10*(x-.2))-0.19609374999999996)
-        .onComplete(({ y }): void => {
-          const sliceArcWidth: number = ((Math.PI * 2) * this.sizeOfSlice);
-          const finalAngleOfRotation: number = (y-sliceArcWidth / 2) % (Math.PI * 2);
-          const winningSlot: number = finalAngleOfRotation / sliceArcWidth;
-          const fixWinningSlot: number = Math.floor(this.wheelItems.length - winningSlot) % this.wheelItems.length;
-
-          this.isSpinning = false;
-
-          resolve(this.wheelItems[fixWinningSlot]);
-        })
-        .onUpdate(({ y }) => {
-          const wholeY: number = Math.floor(y);
-
-          if (wholeY !== lastWholeRotation) {
-            lastWholeRotation = wholeY;
-
-            if (wholeY % 4 === 0) {
-              this.clickHigh.play();
-            } else {
-              this.clickLow.play();
-            }
-          }
-        })
-        .onStop((): void => {
-          this.transformNode.rotation.y = 0;
-          this.isSpinning = false;
-
-          reject();
-        })
-        .start();
+    const spinPromise = new Promise((resolve) => {
+      this.spinResolver = resolve;
     });
+
+    this.wheelPhysics.rotationAcceleration = 0.01;
+    await waitFor(500); // how long to accelerate in ms
+    this.wheelPhysics.rotationAcceleration = 0;
+    await waitFor(2500); // How long to hold in ms
+    this.wheelPhysics.friction = 0.9825;
+    
+    await spinPromise;
+
+    // Resume slow spin
+    this.wheelPhysics.friction = 1;
+
+    console.timeEnd('spinTime');
+
+    return this.wheelItems[this.getCurrentWinner()];
+
   }
 }
