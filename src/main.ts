@@ -55,7 +55,7 @@ window.addEventListener('DOMContentLoaded', (): void => {
     }
   });
 
-  canvas.addEventListener('pointerup', spinWheel);
+  // canvas.addEventListener('pointerup', spinWheel);
   clickToSpinDiv.addEventListener('pointerup', spinWheel);
   winnerDiv.addEventListener('pointerup', spinWheel);
 });
