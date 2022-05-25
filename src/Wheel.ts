@@ -16,6 +16,7 @@ import { update as TweenUpdate, Tween } from '@tweenjs/tween.js';
 import { Texture, Space } from './constants';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
 import { Sound } from '@babylonjs/core/Audio/sound';
+import { easeOutElastic, easeOutSigmoid } from './easings';
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output: Color3[] = [];
@@ -41,16 +42,6 @@ function shuffleArrayInPlace(target: any[]): void {
   }
 }
 
-function easeOutElastic(x: number): number {
-  const c4: number = (2 * Math.PI) / 3;
-  
-  return x === 0
-    ? 0
-    : x === 1
-    ? 1
-    : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
-}
-
 function waitFor(waitTime: number = 0): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, waitTime))
 }
@@ -64,13 +55,14 @@ export class Wheel implements WheelInterface {
   private transformNode: TransformNode;
   private colors: Color3[];
   private sizeOfSlice: number;
-  private isSpinning: boolean;
+  public isSpinning: boolean;
   private clickHigh: Sound;
   private clickLow: Sound;
   private flipPointer: Function | null;
   private currentWinner: number;  
   private wheelPhysics: WheelPhysics;
   private spinResolver: any;
+  private initialDecelerationSpeed: number;
 
   constructor(canvas: HTMLCanvasElement, wheelItems: string[] = []) {
     if (!canvas) throw new Error('No canvas provided');
@@ -89,6 +81,7 @@ export class Wheel implements WheelInterface {
       rotation: 0,
     }
     this.spinResolver = null;
+    this.initialDecelerationSpeed = 0;
 
     this.engine = new Engine(this.canvas, true);
     this.scene = new Scene(this.engine);
@@ -99,7 +92,7 @@ export class Wheel implements WheelInterface {
     this.clickHigh = new Sound('ClickHigh', './media/click_high.wav', this.scene);
     this.clickLow = new Sound('ClickLow', './media/click_low.wav', this.scene);
 
-    this.camera.attachControl(this.canvas, true);
+    //this.camera.attachControl(this.canvas, true);
 
     this.camera.setTarget(Vector3.Zero());
 
@@ -129,6 +122,11 @@ export class Wheel implements WheelInterface {
       if (this.spinResolver) {
         this.spinResolver();
       }
+    }
+
+    // Rotate beta back if friction is < 1
+    if (this.wheelPhysics.friction < 1) {
+      this.camera.beta = 0.01+ 0.8552 * (this.wheelPhysics.rotationSpeed / this.initialDecelerationSpeed);
     }
     
     // Calculate winner and play sounds if needed
@@ -296,7 +294,15 @@ export class Wheel implements WheelInterface {
   }
 
   public async spin(): Promise<string | void> {
-    console.time('spinTime');
+    this.isSpinning = true;
+
+    new Tween({ beta: this.camera.beta })
+      .to({ beta: 0.8552 }, 900)
+      .easing(easeOutSigmoid(7))
+      .onUpdate(({ beta }) => {
+        this.camera.beta = beta;
+      })
+      .start();
 
     const spinPromise = new Promise((resolve) => {
       this.spinResolver = resolve;
@@ -306,14 +312,16 @@ export class Wheel implements WheelInterface {
     await waitFor(500); // how long to accelerate in ms
     this.wheelPhysics.rotationAcceleration = 0;
     await waitFor(2500); // How long to hold in ms
+
     this.wheelPhysics.friction = 0.9825;
-    
+    this.initialDecelerationSpeed = this.wheelPhysics.rotationSpeed;
+
     await spinPromise;
 
     // Resume slow spin
     this.wheelPhysics.friction = 1;
 
-    console.timeEnd('spinTime');
+    this.isSpinning = false;
 
     return this.wheelItems[this.getCurrentWinner()];
 

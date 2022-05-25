@@ -1,5 +1,6 @@
 import { HelpIcon, EditorIcon } from './Icons';
 import type { Icon } from './Icons';
+import type { Wheel } from './Wheel';
 
 interface Icons {
   [key: string]: Icon;
@@ -9,7 +10,7 @@ export class IconController {
   private iconContainer: HTMLDivElement;
   private icons: Icons;
 
-  constructor(iconContainer: HTMLDivElement) {
+  constructor(iconContainer: HTMLDivElement, wheel: Wheel) {
     this.iconContainer = iconContainer;
     this.icons = {};
 
@@ -17,7 +18,7 @@ export class IconController {
       if (iconElement.dataset.modalid === 'help') {
         this.icons[iconElement.dataset.modalid!] = new HelpIcon(iconElement);
       } else if (iconElement.dataset.modalid === 'editor') {
-        this.icons[iconElement.dataset.modalid!] = new EditorIcon(iconElement);
+        this.icons[iconElement.dataset.modalid!] = new EditorIcon(iconElement, wheel);
       }
     });
 
