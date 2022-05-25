@@ -11,8 +11,8 @@ export const easeInOutQuart = (t: number): number => t<.5? 8*t*t*t*t: 1-8*(--t)*
 export const easeInQuint = (t: number): number => t*t*t*t*t;
 export const easeOutQuint = (t: number): number => 1+(--t)*t*t*t*t;
 export const easeInOutQuint = (t: number): number => t<.5? 16*t*t*t*t*t: 1+16*(--t)*t*t*t*t;
-export const easeOutSigmoid = (a: number): Function => (t: number): number => 0.5/((1/(1+Math.exp(-a)))-0.5)*((1/(1+Math.exp(-a*(2*((t+.5)/1.5)-1))))-0.5)+0.5;
-export const easeSigmoid = (a: number): Function => (t: number): number => 0.5/((1/(1+Math.exp(-a)))-0.5)*((1/(1+Math.exp(-a*(2*t-1))))-0.5)+0.5;
+export const easeOutSigmoid = (a: number): any => (t: number): number => 0.5/((1/(1+Math.exp(-a)))-0.5)*((1/(1+Math.exp(-a*(2*((t+.5)/1.5)-1))))-0.5)+0.5;
+export const easeSigmoid = (a: number): any => (t: number): number => 0.5/((1/(1+Math.exp(-a)))-0.5)*((1/(1+Math.exp(-a*(2*t-1))))-0.5)+0.5;
 export const easeSmoothStep = (t: number): number => 3*t*t - 2*t*t*t;
 export const easeOutSine = (t: number): number => Math.sin(t*Math.PI*.5);
 export const easeInSine = (t: number): number => Math.sin(t*Math.PI*.5-Math.PI*.5)+1;
@@ -21,7 +21,7 @@ export const easeOutCircle = (t: number): number => 1-Math.sqrt(1-t*t);
 export const easeInCircle = (t: number): number => Math.sqrt(1-Math.pow(t-1,2));
 export const easeInOutCircle = (t: number): number => t<.5?.5-.5*Math.sqrt(1-4*t*t):.5+Math.sqrt(1-Math.pow((t-1)*2,2))*.5;
 export const easeInOutInvCircle = (t: number): number => t<.5 ?Math.sqrt(-(t-1)*t):1-Math.sqrt(-(t-1)*t);
-export const easeBackOut = (p: number): Function => (t: number): number => --t*t*((p+1)*t+p)+1;
+export const easeBackOut = (p: number): any => (t: number): number => --t*t*((p+1)*t+p)+1;
 export const easeOutElastic = (x: number): number => x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
 
 export default Object.freeze({
