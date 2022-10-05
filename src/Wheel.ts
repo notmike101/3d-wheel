@@ -17,6 +17,7 @@ import { Texture, Space } from './constants';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
 import { Sound } from '@babylonjs/core/Audio/sound';
 import { easeOutElastic, easeOutSigmoid } from './easings';
+import {Fireworks} from "@/Fireworks";
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output: Color3[] = [];
@@ -323,7 +324,35 @@ export class Wheel implements WheelInterface {
 
     this.isSpinning = false;
 
+    this.triggerFireworks();
+
     return this.wheelItems[this.getCurrentWinner()];
 
+  }
+
+  private triggerFireworks() {
+    const waitTimes = [];
+    for (let i = 0; i < 4; i++) {
+      waitTimes.push((Math.random() * 400) + 400);
+    }
+    waitTimes.push(0);
+    this.prepareNextFirework(waitTimes);
+  }
+
+  private prepareNextFirework(waitTimes: number[]) {
+    if (this.isSpinning) {
+      return;
+    }
+    const waitTime = waitTimes.pop();
+    setTimeout(() => {
+      const y = (Math.random() * 100) + 50;
+      const x = (Math.random() < 0.5 ? -1 : 1) * ((Math.random() * y * 0.2) + (y * 0.4));
+      const z = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * y * 0.4);
+      const firework = new Fireworks(this.scene);
+      firework.shootFirework(x, -y, z);
+      if (waitTimes.length > 0) {
+        this.prepareNextFirework(waitTimes);
+      }
+    }, waitTime)
   }
 }
