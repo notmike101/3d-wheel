@@ -1,7 +1,7 @@
 import {Scene} from "@babylonjs/core/scene";
 import {
     Color4,
-    MeshBuilder, Particle, ParticleSystem, Texture,
+    MeshBuilder, Particle, ParticleSystem, Scalar, Texture, TransformNode,
     Vector3,
     VertexBuffer
 } from "@babylonjs/core";
@@ -14,13 +14,67 @@ export class Fireworks implements FireworksInterface {
     }
 
     public shootFirework(x: number, y: number, z: number): void {
-        this.explodeFirework(new Vector3(x, y, z));
+        let firework = new TransformNode("firework", this.scene);
+        firework.position = new Vector3(x, y, z + 80);
+        firework.rotation.x = Math.PI / 2;
+
+        let particleSystem = new ParticleSystem("fountain", 350, this.scene);
+        let updateFunction = function(this: ParticleSystem, particles: Particle[]) {
+            firework.position.z = Scalar.SmoothStep(firework.position.z, z, 0.11);
+            this.emitRate = this.emitRate >= 4 ? this.emitRate - 4 : 1;
+            this.maxSize = this.maxSize > this.minSize ? this.maxSize - 0.005 : this.minSize;
+            for (let index = 0; index < particles.length; index++) {
+                let particle = particles[index];
+                particle.age += this._scaledUpdateSpeed;
+                if (particle.age >= particle.lifeTime) {
+                    this.recycleParticle(particle);
+                    index--;
+                } else {
+                    particle.size -= 0.01;
+                    particle.direction.scaleToRef(particleSystem._scaledUpdateSpeed, particleSystem._scaledDirection);
+                    particle.position.addInPlace(particleSystem._scaledDirection);
+                    particleSystem.gravity.scaleToRef(particleSystem._scaledUpdateSpeed, particleSystem._scaledGravity);
+                    particle.direction.addInPlace(particleSystem._scaledGravity);
+                }
+            }
+            if (this.emitRate === 1) {
+                this.stop();
+            }
+        };
+        particleSystem.particleTexture = new Texture('/media/flare.png', this.scene);
+        particleSystem.updateFunction = updateFunction;
+        particleSystem.emitter = firework;
+        particleSystem.createConeEmitter(2, 0.5);
+        particleSystem.particleEmitterType.emitFromSpawnPointOnly = true;
+        particleSystem.color1 = new Color4(1, 0.9, 0.8, 1.0);
+        particleSystem.color2 = new Color4(1, 0.5, 0.2, 1.0);
+        particleSystem.colorDead = new Color4(0, 0, 0, 0);
+        particleSystem.minSize = 0.5;
+        particleSystem.maxSize = 1;
+        particleSystem.minLifeTime = 0.5;
+        particleSystem.maxLifeTime = 2;
+        particleSystem.minScaleX = 0.4;
+        particleSystem.maxScaleX = 0.9;
+        particleSystem.emitRate = 350;
+        particleSystem.blendMode = ParticleSystem.BLENDMODE_ONEONE;
+        particleSystem.minEmitPower = 30;
+        particleSystem.maxEmitPower = 30;
+        particleSystem.updateSpeed = 1 / 60;
+        particleSystem.disposeOnStop = true;
+        particleSystem.onStoppedObservable.add(() => {
+            setTimeout(() => {
+                this.explodeFirework(firework.position);
+                firework.dispose();
+            }, 200);
+        });
+        particleSystem.start();
     }
 
     private explodeFirework(position: Vector3): void {
         let centerExplosion = MeshBuilder.CreateSphere("explosion", { segments: 2, diameter: 1}, this.scene);
         centerExplosion.isVisible = false;
         centerExplosion.position = position;
+        centerExplosion.rotation = new Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
         centerExplosion.useVertexColors = true;
         let verticesPositions = centerExplosion.getVerticesData(VertexBuffer.PositionKind);
         let verticesNormals = centerExplosion.getVerticesData(VertexBuffer.NormalKind);
@@ -83,7 +137,7 @@ export class Fireworks implements FireworksInterface {
                     index--;
                 } else {
                     if(particle.size < .162){
-                        particle.size = particle.size +.005;
+                        particle.size += .005;
                     }
                     particle.direction.scaleToRef(particleSystem._scaledUpdateSpeed, particleSystem._scaledDirection);
                     particle.position.addInPlace(particleSystem._scaledDirection);

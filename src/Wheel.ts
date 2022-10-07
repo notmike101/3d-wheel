@@ -345,9 +345,9 @@ export class Wheel implements WheelInterface {
     }
     const waitTime = waitTimes.pop();
     setTimeout(() => {
-      const y = (Math.random() * 100) + 50;
-      const x = (Math.random() < 0.5 ? -1 : 1) * ((Math.random() * y * 0.2) + (y * 0.4));
-      const z = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * y * 0.4);
+      const y = (Math.random() * 50) + 50;
+      const x = (waitTimes.length % 2 === 0 ? -1 : 1) * ((Math.random() * y * 0.2) + (y * 0.4));
+      const z = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * y * 0.3);
       const firework = new Fireworks(this.scene);
       firework.shootFirework(x, -y, z);
       if (waitTimes.length > 0) {
