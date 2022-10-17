@@ -3,14 +3,62 @@ import {
     Color4,
     MeshBuilder, Particle, ParticleSystem, Scalar, Texture, TransformNode,
     Vector3,
-    VertexBuffer
+    VertexBuffer,
+    SpriteManager, Sprite, StandardMaterial, Mesh, Vector4
 } from "@babylonjs/core";
+
+
+// https://en.wikipedia.org/wiki/Xorshift#xorwow
+window.xorshift = function() {
+    const a = new Uint32Array(1);
+    const x = new Uint32Array(1);
+    a[0] = 1337;
+    return function() {
+        x[0] = a[0];
+        x[0] ^= x[0] << 13;
+        x[0] ^= x[0] >> 17;
+        x[0] ^= x[0] << 5;
+        return a[0] = x[0];
+    }
+}
+window.xorshift = xorshift(); // initialize
+window._xorshift = xorshift;  // save old
+window.xorshift = function() { return window._xorshift() / 4294967296; } // normalize to [0, 1]
+
+// Function to create a plane with a texture
+function createPlaneWithTexture(scene: Scene, texture: Texture, size: number, name: string) {
+    const plane = MeshBuilder.CreatePlane(name, {width: size, height: size}, scene);
+    plane.material = new StandardMaterial(name, scene);
+    plane.material.backFaceCulling = false;
+    plane.material.diffuseTexture = texture;
+    plane.material.opacityTexture = plane.material.diffuseTexture;
+    // Emissive color is used to make the texture visible
+    plane.material.emissiveColor = new Color4(1, 1, 1, 1);
+    plane.isVisible = false;
+    return plane;
+}
+
 
 export class Fireworks implements FireworksInterface {
     private scene: Scene;
 
     constructor(scene: Scene) {
         this.scene = scene;
+        // Load a texture 
+        let texture = new Texture('/media/flare.png', scene);
+        // Create a plane with the texture
+        let plane = createPlaneWithTexture(scene, texture, 2, "plane");
+        this.plane = plane;
+
+        //const FlareManager = new SpriteManager('flares', '/media/flare.png', 1000, 256, scene);
+        this.sprites = [];
+        for (let i = 0; i < 1000; i++) {
+            const flare = plane.createInstance('flare' + i);
+            flare.isVisible = false;
+            // Set x scale to 0.015
+            flare.scaling.x = 0.15;
+            this.sprites.push(flare);
+        }
     }
 
     public shootFirework(x: number, y: number, z: number): void {
@@ -70,107 +118,57 @@ export class Fireworks implements FireworksInterface {
         particleSystem.start();
     }
 
+    // Use 3D polar coordinates to generate a random vector
+    private generateSphereicallyRandomVector(_r): Vector3 {
+        if (!_r) _r = 1;
+        let theta = window.xorshift() * 2 * Math.PI;
+        let phi = Math.acos(window.xorshift() * 2 - 1);
+        let r = xorshift() * _r;
+        return new Vector3(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+    }
+
     private explodeFirework(position: Vector3): void {
-        let centerExplosion = MeshBuilder.CreateSphere("explosion", { segments: 2, diameter: 1}, this.scene);
-        centerExplosion.isVisible = false;
-        centerExplosion.position = position;
-        centerExplosion.rotation = new Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-        centerExplosion.useVertexColors = true;
-        let verticesPositions = centerExplosion.getVerticesData(VertexBuffer.PositionKind);
-        let verticesNormals = centerExplosion.getVerticesData(VertexBuffer.NormalKind);
-        let verticesColor = [];
-        let particleSystems: ParticleSystem[] = [];
+        const color = new Color4(xorshift()+.4, xorshift()+.4, xorshift()+.4, 1);
+        this.plane.material.emissiveColor = color;
+        for (let i = 0; i < this.sprites.length; i++) {
+            this.sprites[i].isVisible = true;
 
-        if (verticesPositions === null || verticesNormals === null) {
-            return;
+            let sRandom = this.generateSphereicallyRandomVector();
+            this.sprites[i].position.set(position.x, position.y, position.z);
+            this.sprites[i].direction = sRandom; // Send the sprites off in random directions
+            this.sprites[i].direction.normalize();
+            this.sprites[i].direction.scaleInPlace((9+1*xorshift())/8);  // use /10 if close to wheel
         }
-        for (let i = 0; i < verticesPositions.length; i += 3){
-            let vertexPosition = new Vector3(
-                verticesPositions[i],
-                verticesPositions[i + 1],
-                verticesPositions[i + 2]
-            );
-            let vertexNormal = new Vector3(
-                verticesNormals[i],
-                verticesNormals[i + 1],
-                verticesNormals[i + 2]
-            );
-            let r = Math.random();
-            let g = Math.random();
-            let b = Math.random();
-            let alpha = 1.0;
-            let color = new Color4(r, g, b, alpha);
-            verticesColor.push(r);
-            verticesColor.push(g);
-            verticesColor.push(b);
-            verticesColor.push(alpha);
-            particleSystems.push(this.createParticleSystem(vertexPosition.add(centerExplosion.position), vertexNormal.normalize().scale(1), color));
 
-        }
-        centerExplosion.setVerticesData(VertexBuffer.ColorKind, verticesColor);
-        let duration = 0;
+        // Hook on to the render loop to update the sprites
+        this.scene.registerBeforeRender(() => {
+            for (let i = 0; i < this.sprites.length; i++) {
+                // Update velocities
 
-        const beforeRender = () =>{
-            if ((!particleSystems[0].isReady() || !particleSystems[0].isAlive()) && duration === 0) {
-                return;
+                // Scale direction based on 
+                this.sprites[i].position.addInPlace( this.sprites[i].direction.scale(.1*this.scene.getAnimationRatio()) );
+                // Apply gravity
+                this.sprites[i].direction.addInPlace( new Vector3(0, 0, 0.0033) );
+                // drag coefficient
+                this.sprites[i].direction.scaleInPlace(0.99);
+
+                // Update angle of plane to face direction of travel
+                this.sprites[i].lookAt(this.sprites[i].position.add(this.sprites[i].direction));
+
+                // Add 90 degrees to x angle to make plane face direction of travel
+                this.sprites[i].rotation.x += Math.PI / 2;
+
+                // Simple scaling of y based on magnitude of velocity (Might cap the max here or use log)
+                this.sprites[i].scaling.y = this.sprites[i].direction.length();
             }
-            if (duration > 2500) {
-                this.scene.unregisterBeforeRender(beforeRender);
-                centerExplosion.dispose();
-                return;
-            }
-            duration += this.scene.deltaTime;
-        };
 
-        this.scene.registerBeforeRender(beforeRender);
+            // Fade out the original instance
+            this.plane.material.alpha -= 0.0025*this.scene.getAnimationRatio();
+            if (this.plane.material.alpha <= 0) {
+                this.plane.material.isVisible = false;
+            }
+        });
     }
 
-    private createParticleSystem(emitter: Vector3, direction: Vector3, color: Color4): ParticleSystem
-    {
-        let particleSystem = new ParticleSystem("particles", 500, this.scene);
-        let updateFunction = function(this: ParticleSystem, particles: Particle[]) {
-            for (let index = 0; index < particles.length; index++) {
-                let particle = particles[index];
-                particle.age += this._scaledUpdateSpeed;
-                if (particle.age >= particle.lifeTime) {
-                    this.recycleParticle(particle);
-                    index--;
-                } else {
-                    if(particle.size < .162){
-                        particle.size += .005;
-                    }
-                    particle.direction.scaleToRef(particleSystem._scaledUpdateSpeed, particleSystem._scaledDirection);
-                    particle.position.addInPlace(particleSystem._scaledDirection);
-                    particleSystem.gravity.scaleToRef(particleSystem._scaledUpdateSpeed, particleSystem._scaledGravity);
-                    particle.direction.addInPlace(particleSystem._scaledGravity);
-                }
-            }
-        };
-
-        particleSystem.updateFunction = updateFunction;
-        particleSystem.particleTexture = new Texture('/media/Flare.png', this.scene);
-        particleSystem.emitter = emitter;
-        particleSystem.minEmitBox = new Vector3(0, 0, 0);
-        particleSystem.maxEmitBox = new Vector3(0, 0, 0);
-        particleSystem.color1 = color;
-        particleSystem.color2 = color;
-        particleSystem.colorDead = new Color4(0, 0, 0, 0.0);
-        particleSystem.minSize = .1;
-        particleSystem.maxSize = .1;
-        particleSystem.minLifeTime = 1;
-        particleSystem.maxLifeTime = 2;
-        particleSystem.emitRate = 500;
-        particleSystem.blendMode = ParticleSystem.BLENDMODE_ONEONE;
-        particleSystem.gravity = new Vector3(0, 0, 4);
-        particleSystem.direction1 = direction;
-        particleSystem.direction2 = direction;
-        particleSystem.minEmitPower = 10;
-        particleSystem.maxEmitPower = 13;
-        particleSystem.updateSpeed = 1 / 60;
-        particleSystem.targetStopDuration = 0.3;
-        particleSystem.disposeOnStop = true;
-        particleSystem.start();
-
-        return particleSystem;
-    }
 }
+
