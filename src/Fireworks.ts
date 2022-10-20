@@ -3,8 +3,7 @@ import {
     Color4,
     MeshBuilder, Particle, ParticleSystem, Scalar, Texture, TransformNode,
     Vector3,
-    VertexBuffer,
-    SpriteManager, Sprite, StandardMaterial, Mesh, Vector4
+    StandardMaterial
 } from "@babylonjs/core";
 
 
@@ -20,10 +19,10 @@ window.xorshift = function() {
         x[0] ^= x[0] << 5;
         return a[0] = x[0];
     }
-}
+};
 window.xorshift = xorshift(); // initialize
 window._xorshift = xorshift;  // save old
-window.xorshift = function() { return window._xorshift() / 4294967296; } // normalize to [0, 1]
+window.xorshift = function() { return window._xorshift() / 4294967296; }; // normalize to [0, 1]
 
 // Function to create a plane with a texture
 function createPlaneWithTexture(scene: Scene, texture: Texture, size: number, name: string) {
@@ -119,7 +118,7 @@ export class Fireworks implements FireworksInterface {
     }
 
     // Use 3D polar coordinates to generate a random vector
-    private generateSphereicallyRandomVector(_r): Vector3 {
+    private generateSphericallyRandomVector(_r): Vector3 {
         if (!_r) _r = 1;
         let theta = window.xorshift() * 2 * Math.PI;
         let phi = Math.acos(window.xorshift() * 2 - 1);
@@ -133,7 +132,7 @@ export class Fireworks implements FireworksInterface {
         for (let i = 0; i < this.sprites.length; i++) {
             this.sprites[i].isVisible = true;
 
-            let sRandom = this.generateSphereicallyRandomVector();
+            let sRandom = this.generateSphericallyRandomVector();
             this.sprites[i].position.set(position.x, position.y, position.z);
             this.sprites[i].direction = sRandom; // Send the sprites off in random directions
             this.sprites[i].direction.normalize();

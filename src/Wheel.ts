@@ -113,10 +113,13 @@ export class Wheel implements WheelInterface {
       e.preventDefault();
 
       // Trace cursor position
-      const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
+      const pickResult = new Vector3(
+          (this.scene.pointerX - (e.currentTarget.offsetWidth  / 2)) * -0.0465,
+          -50,
+          (this.scene.pointerY - (e.currentTarget.offsetHeight / 2)) * 0.0465
+      );
       const firework = new Fireworks(this.scene);
-      firework.explodeFirework(pickResult.pickedPoint);
-      console.log(pickResult.pickedPoint);
+      firework.explodeFirework(pickResult);
     });
   }
 
