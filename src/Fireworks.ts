@@ -3,7 +3,7 @@ import {
     Color4,
     MeshBuilder, Particle, ParticleSystem, Scalar, Texture, TransformNode,
     Vector3,
-    StandardMaterial
+    StandardMaterial, Matrix, Quaternion, Mesh
 } from "@babylonjs/core";
 
 
@@ -26,37 +26,46 @@ window.xorshift = function() { return window._xorshift() / 4294967296; }; // nor
 
 // Function to create a plane with a texture
 function createPlaneWithTexture(scene: Scene, texture: Texture, size: number, name: string) {
-    const plane = MeshBuilder.CreatePlane(name, {width: size, height: size}, scene);
+    const plane = MeshBuilder.CreatePlane(name, {width: size, height: size}, null);
     plane.material = new StandardMaterial(name, scene);
     plane.material.backFaceCulling = false;
     plane.material.diffuseTexture = texture;
     plane.material.opacityTexture = plane.material.diffuseTexture;
     // Emissive color is used to make the texture visible
     plane.material.emissiveColor = new Color4(1, 1, 1, 1);
-    plane.isVisible = false;
     return plane;
 }
 
+function setDirection(localAxis: Vector3, yawCor: number = 0, pitchCor: number = 0, rollCor: number = 0): Quaternion {
+    const yaw = -Math.atan2(localAxis.z, localAxis.x) + Math.PI / 2;
+    const len = Math.sqrt(localAxis.x * localAxis.x + localAxis.z * localAxis.z);
+    const pitch = -Math.atan2(localAxis.y, len);
+    const result = Quaternion.Zero();
+    Quaternion.RotationYawPitchRollToRef(yaw + yawCor, pitch + pitchCor, rollCor, result);
+    return result;
+}
 
 export class Fireworks implements FireworksInterface {
     private scene: Scene;
+    private texture: Texture;
+    private plane: Mesh;
+    private instanceProps;
 
     constructor(scene: Scene) {
         this.scene = scene;
         // Load a texture 
-        let texture = new Texture('/media/flare.png', scene);
+        this.texture = new Texture('/media/flare.png', scene);
         // Create a plane with the texture
-        let plane = createPlaneWithTexture(scene, texture, 2, "plane");
-        this.plane = plane;
+        this.plane = createPlaneWithTexture(scene, this.texture, 2, "plane");
 
-        //const FlareManager = new SpriteManager('flares', '/media/flare.png', 1000, 256, scene);
-        this.sprites = [];
+        this.instanceProps = [];
         for (let i = 0; i < 1000; i++) {
-            const flare = plane.createInstance('flare' + i);
-            flare.isVisible = false;
-            // Set x scale to 0.015
-            flare.scaling.x = 0.15;
-            this.sprites.push(flare);
+            this.instanceProps.push({
+                position: Vector3.Zero(),
+                direction: Vector3.Zero(),
+                scaling: Vector3.Zero(),
+                rotation: Quaternion.Zero(),
+            });
         }
     }
 
@@ -88,7 +97,7 @@ export class Fireworks implements FireworksInterface {
                 this.stop();
             }
         };
-        particleSystem.particleTexture = new Texture('/media/flare.png', this.scene);
+        particleSystem.particleTexture = this.texture;
         particleSystem.updateFunction = updateFunction;
         particleSystem.emitter = firework;
         particleSystem.createConeEmitter(2, 0.5);
@@ -118,7 +127,7 @@ export class Fireworks implements FireworksInterface {
     }
 
     // Use 3D polar coordinates to generate a random vector
-    private generateSphericallyRandomVector(_r): Vector3 {
+    private generateSphericallyRandomVector(_r?: number): Vector3 {
         if (!_r) _r = 1;
         let theta = window.xorshift() * 2 * Math.PI;
         let phi = Math.acos(window.xorshift() * 2 - 1);
@@ -129,43 +138,60 @@ export class Fireworks implements FireworksInterface {
     private explodeFirework(position: Vector3): void {
         const color = new Color4(xorshift()+.4, xorshift()+.4, xorshift()+.4, 1);
         this.plane.material.emissiveColor = color;
-        for (let i = 0; i < this.sprites.length; i++) {
-            this.sprites[i].isVisible = true;
+        let m = Matrix.Identity();
+        let matricesData = new Float32Array(16 * this.instanceProps.length);
 
+        const rotation = Quaternion.Identity();
+        const scaling = new Vector3(0.15, 1, 1);
+
+        for (let i = 0; i < this.instanceProps.length; i++) {
             let sRandom = this.generateSphericallyRandomVector();
-            this.sprites[i].position.set(position.x, position.y, position.z);
-            this.sprites[i].direction = sRandom; // Send the sprites off in random directions
-            this.sprites[i].direction.normalize();
-            this.sprites[i].direction.scaleInPlace((9+1*xorshift())/8);  // use /10 if close to wheel
+            this.instanceProps[i].position.set(position.x, position.y, position.z);
+            this.instanceProps[i].direction = sRandom; // Send the sprites off in random directions
+            this.instanceProps[i].direction.normalize();
+            this.instanceProps[i].direction.scaleInPlace((9+1*xorshift())/8);  // use /10 if close to wheel
+            this.instanceProps[i].scaling = scaling;
+            Matrix.ComposeToRef(scaling, rotation, position, m);
+            m.copyToArray(matricesData, i * 16);
         }
+
+        this.plane.thinInstanceSetBuffer("matrix", matricesData, 16);
 
         // Hook on to the render loop to update the sprites
         this.scene.registerBeforeRender(() => {
-            for (let i = 0; i < this.sprites.length; i++) {
+            for (let i = 0; i < this.instanceProps.length; i++)
+            {
                 // Update velocities
 
-                // Scale direction based on 
-                this.sprites[i].position.addInPlace( this.sprites[i].direction.scale(.1*this.scene.getAnimationRatio()) );
+                // Scale direction based on
+                this.instanceProps[i].position.addInPlace(this.instanceProps[i].direction.scale(.1*this.scene.getAnimationRatio()));
                 // Apply gravity
-                this.sprites[i].direction.addInPlace( new Vector3(0, 0, 0.0033) );
+                this.instanceProps[i].direction.addInPlace( new Vector3(0, 0, 0.0033) );
                 // drag coefficient
-                this.sprites[i].direction.scaleInPlace(0.99);
+                this.instanceProps[i].direction.scaleInPlace(0.99);
 
                 // Update angle of plane to face direction of travel
-                this.sprites[i].lookAt(this.sprites[i].position.add(this.sprites[i].direction));
+                let result = Vector3.Zero();
+                this.instanceProps[i].position.add(this.instanceProps[i].direction).subtractToRef(this.instanceProps[i].position, result);
+                this.instanceProps[i].rotation = setDirection(result, 0, 0, 0);
 
                 // Add 90 degrees to x angle to make plane face direction of travel
-                this.sprites[i].rotation.x += Math.PI / 2;
+                this.instanceProps[i].rotation.x += Math.PI / 2;
 
                 // Simple scaling of y based on magnitude of velocity (Might cap the max here or use log)
-                this.sprites[i].scaling.y = this.sprites[i].direction.length();
+                this.instanceProps[i].scaling.y = this.instanceProps[i].direction.length();
+                Matrix.ComposeToRef(this.instanceProps[i].scaling, this.instanceProps[i].rotation, this.instanceProps[i].position, m);
+                m.copyToArray(matricesData, i * 16);
             }
 
             // Fade out the original instance
             this.plane.material.alpha -= 0.0025*this.scene.getAnimationRatio();
             if (this.plane.material.alpha <= 0) {
                 this.plane.material.isVisible = false;
+                this.plane.dispose();
             }
+
+            this.plane.thinInstanceBufferUpdated("matrix");
         });
     }
 
