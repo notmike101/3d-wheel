@@ -26,13 +26,14 @@ window.xorshift = function() { return window._xorshift() / 4294967296; }; // nor
 
 // Function to create a plane with a texture
 function createPlaneWithTexture(scene: Scene, texture: Texture, size: number, name: string) {
-    const plane = MeshBuilder.CreatePlane(name, {width: size, height: size}, null);
+    const plane = MeshBuilder.CreatePlane(name, {width: size, height: size}, scene);
     plane.material = new StandardMaterial(name, scene);
     plane.material.backFaceCulling = false;
     plane.material.diffuseTexture = texture;
     plane.material.opacityTexture = plane.material.diffuseTexture;
     // Emissive color is used to make the texture visible
     plane.material.emissiveColor = new Color4(1, 1, 1, 1);
+    plane.isVisible = false;
     return plane;
 }
 
@@ -47,16 +48,15 @@ function setDirection(localAxis: Vector3, yawCor: number = 0, pitchCor: number =
 
 export class Fireworks implements FireworksInterface {
     private scene: Scene;
-    private texture: Texture;
     private plane: Mesh;
     private instanceProps;
 
     constructor(scene: Scene) {
         this.scene = scene;
         // Load a texture 
-        this.texture = new Texture('/media/flare.png', scene);
+        let texture = new Texture('/media/flare.png', scene);
         // Create a plane with the texture
-        this.plane = createPlaneWithTexture(scene, this.texture, 2, "plane");
+        this.plane = createPlaneWithTexture(scene, texture, 2, "plane");
 
         this.instanceProps = [];
         for (let i = 0; i < 1000; i++) {
@@ -97,7 +97,7 @@ export class Fireworks implements FireworksInterface {
                 this.stop();
             }
         };
-        particleSystem.particleTexture = this.texture;
+        particleSystem.particleTexture = new Texture('/media/flare.png', this.scene);
         particleSystem.updateFunction = updateFunction;
         particleSystem.emitter = firework;
         particleSystem.createConeEmitter(2, 0.5);
@@ -156,9 +156,10 @@ export class Fireworks implements FireworksInterface {
         }
 
         this.plane.thinInstanceSetBuffer("matrix", matricesData, 16);
+        this.plane.isVisible = true;
 
         // Hook on to the render loop to update the sprites
-        this.scene.registerBeforeRender(() => {
+        const beforeRender = () => {
             for (let i = 0; i < this.instanceProps.length; i++)
             {
                 // Update velocities
@@ -176,7 +177,9 @@ export class Fireworks implements FireworksInterface {
                 this.instanceProps[i].rotation = setDirection(result, 0, 0, 0);
 
                 // Add 90 degrees to x angle to make plane face direction of travel
-                this.instanceProps[i].rotation.x += Math.PI / 2;
+                const rotation = this.instanceProps[i].rotation.toEulerAngles();
+                rotation.x += Math.PI / 2;
+                this.instanceProps[i].rotation = rotation.toQuaternion();
 
                 // Simple scaling of y based on magnitude of velocity (Might cap the max here or use log)
                 this.instanceProps[i].scaling.y = this.instanceProps[i].direction.length();
@@ -189,10 +192,12 @@ export class Fireworks implements FireworksInterface {
             if (this.plane.material.alpha <= 0) {
                 this.plane.material.isVisible = false;
                 this.plane.dispose();
+                this.scene.unregisterBeforeRender(beforeRender);
             }
 
             this.plane.thinInstanceBufferUpdated("matrix");
-        });
+        };
+        this.scene.registerBeforeRender(beforeRender);
     }
 
 }
