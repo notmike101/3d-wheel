@@ -37,13 +37,12 @@ function createPlaneWithTexture(scene: Scene, texture: Texture, size: number, na
     return plane;
 }
 
-function setDirection(localAxis: Vector3, yawCor: number = 0, pitchCor: number = 0, rollCor: number = 0): Quaternion {
+
+function setDirection(localAxis: Vector3, yawCor: number = 0, pitchCor: number = 0, rollCor: number = 0, result: Quaternion) {
     const yaw = -Math.atan2(localAxis.z, localAxis.x) + Math.PI / 2;
     const len = Math.sqrt(localAxis.x * localAxis.x + localAxis.z * localAxis.z);
     const pitch = -Math.atan2(localAxis.y, len);
-    const result = Quaternion.Zero();
     Quaternion.RotationYawPitchRollToRef(yaw + yawCor, pitch + pitchCor, rollCor, result);
-    return result;
 }
 
 export class Fireworks implements FireworksInterface {
@@ -142,7 +141,7 @@ export class Fireworks implements FireworksInterface {
         let matricesData = new Float32Array(16 * this.instanceProps.length);
 
         const rotation = Quaternion.Identity();
-        const scaling = new Vector3(0.15, 1, 1);
+        const scaling = new Vector3(0.1, 1, 1);
 
         for (let i = 0; i < this.instanceProps.length; i++) {
             let sRandom = this.generateSphericallyRandomVector();
@@ -158,28 +157,42 @@ export class Fireworks implements FireworksInterface {
         this.plane.thinInstanceSetBuffer("matrix", matricesData, 16);
         this.plane.isVisible = true;
 
+        // Temporary objects to avoid memory allocation in hot loop
+        const GRAVITY = new Vector3(0, 0, 0.0033);
+        const tmpVec1 = new Vector3();
+        const tmpVec2 = Vector3.Zero();
+
+        const zeroQuat = Quaternion.Zero();
+        const tmpQuat1 = new Quaternion();
+
         // Hook on to the render loop to update the sprites
         const beforeRender = () => {
             for (let i = 0; i < this.instanceProps.length; i++)
             {
                 // Update velocities
 
-                // Scale direction based on
-                this.instanceProps[i].position.addInPlace(this.instanceProps[i].direction.scale(.1*this.scene.getAnimationRatio()));
+                // Apply velocity to position
+                tmpVec1.copyFrom(this.instanceProps[i].direction);
+                tmpVec1.scaleInPlace(.1*this.scene.getAnimationRatio());
+                this.instanceProps[i].position.addInPlace(tmpVec1);
+
                 // Apply gravity
-                this.instanceProps[i].direction.addInPlace( new Vector3(0, 0, 0.0033) );
+                tmpVec1.copyFrom(GRAVITY);
+                tmpVec1.scaleInPlace(this.scene.getAnimationRatio());
+                this.instanceProps[i].direction.addInPlace(tmpVec1);
+
                 // drag coefficient
-                this.instanceProps[i].direction.scaleInPlace(0.99);
+                tmpVec1.copyFrom(this.instanceProps[i].direction);
+                tmpVec1.scaleInPlace(0.02);
+                tmpVec1.scaleInPlace(this.scene.getAnimationRatio());
+                this.instanceProps[i].direction.subtractInPlace(tmpVec1);
 
                 // Update angle of plane to face direction of travel
-                let result = Vector3.Zero();
-                this.instanceProps[i].position.add(this.instanceProps[i].direction).subtractToRef(this.instanceProps[i].position, result);
-                this.instanceProps[i].rotation = setDirection(result, 0, 0, 0);
-
-                // Add 90 degrees to x angle to make plane face direction of travel
-                const rotation = this.instanceProps[i].rotation.toEulerAngles();
-                rotation.x += Math.PI / 2;
-                this.instanceProps[i].rotation = rotation.toQuaternion();
+                this.instanceProps[i].position.addToRef(this.instanceProps[i].direction, tmpVec1);
+                tmpVec1.subtractToRef(this.instanceProps[i].position, tmpVec2);
+                tmpQuat1.copyFrom(zeroQuat);
+                setDirection(tmpVec2, 0, Math.PI / 2, 0, tmpQuat1);
+                this.instanceProps[i].rotation = tmpQuat1;
 
                 // Simple scaling of y based on magnitude of velocity (Might cap the max here or use log)
                 this.instanceProps[i].scaling.y = this.instanceProps[i].direction.length();
@@ -191,7 +204,7 @@ export class Fireworks implements FireworksInterface {
             this.plane.material.alpha -= 0.0025*this.scene.getAnimationRatio();
             if (this.plane.material.alpha <= 0) {
                 this.plane.material.isVisible = false;
-                this.plane.dispose();
+                this.plane.dispose(false, true);
                 this.scene.unregisterBeforeRender(beforeRender);
             }
 
