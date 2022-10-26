@@ -20,6 +20,8 @@ import { easeOutElastic, easeOutSigmoid } from './easings';
 import { Fireworks } from './Fireworks';
 import { makeColorGradient, shuffleArrayInPlace, waitFor } from './utils';
 
+import type { WheelInterface, WheelPhysics } from '@type/Wheel';
+
 export class Wheel implements WheelInterface {
   private canvas: HTMLCanvasElement;
   private engine: Engine;

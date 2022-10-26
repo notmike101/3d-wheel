@@ -13,7 +13,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import { xorshift, createPlaneWithTexture, setQuaternionDirection, generateSphericallyRandomVector } from './utils';
 
-import type { FireworksInterface } from '@type/fireworks';
+import type { FireworksInterface } from '@type/Fireworks';
 import type { ConeParticleEmitter } from '@babylonjs/core/Particles/EmitterTypes/coneParticleEmitter';
 
 export class Fireworks implements FireworksInterface {
