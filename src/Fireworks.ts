@@ -1,8 +1,8 @@
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 
 import { Scene } from '@babylonjs/core/scene';
-import { Color4 } from '@babylonjs/core/Maths/math.color';
-import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
+import { Color4, Color3 } from '@babylonjs/core/Maths/math.color';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Particle } from '@babylonjs/core/Particles/particle';
 import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
 import { Scalar } from '@babylonjs/core/Maths/math.scalar';
@@ -11,44 +11,53 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+
+import type { ConeParticleEmitter } from '@babylonjs/core/Particles/EmitterTypes/coneParticleEmitter';
 
 // https://en.wikipedia.org/wiki/Xorshift#xorwow
-window.xorshift = function() {
+let xorshift: any = () => {
     const a = new Uint32Array(1);
     const x = new Uint32Array(1);
     a[0] = 1337;
-    return function() {
+
+    return () => {
         x[0] = a[0];
         x[0] ^= x[0] << 13;
         x[0] ^= x[0] >> 17;
         x[0] ^= x[0] << 5;
+
         return a[0] = x[0];
     }
 };
-window.xorshift = xorshift(); // initialize
-window._xorshift = xorshift;  // save old
-window.xorshift = function() { return window._xorshift() / 4294967296; }; // normalize to [0, 1]
+
+xorshift = xorshift();
+const _xorshift = xorshift;
+xorshift = () => _xorshift() / 4294967296;
 
 // Function to create a plane with a texture
-function createPlaneWithTexture(scene: Scene, texture: Texture, size: number, name: string) {
-    const plane = MeshBuilder.CreatePlane(name, {width: size, height: size}, scene);
+const createPlaneWithTexture = (scene: Scene, texture: Texture, size: number, name: string) => {
+    const plane = CreatePlane(name, {width: size, height: size}, scene);
+
     plane.material = new StandardMaterial(name, scene);
     plane.material.backFaceCulling = false;
-    plane.material.diffuseTexture = texture;
-    plane.material.opacityTexture = plane.material.diffuseTexture;
+    (plane.material as StandardMaterial).diffuseTexture = texture;
+    (plane.material as StandardMaterial).opacityTexture = (plane.material as StandardMaterial).diffuseTexture;
     // Emissive color is used to make the texture visible
-    plane.material.emissiveColor = new Color4(1, 1, 1, 1);
+    (plane.material as StandardMaterial).emissiveColor = new Color3(1, 1, 1);
     plane.isVisible = false;
+
     return plane;
-}
+};
 
 
-function setDirection(localAxis: Vector3, yawCor: number = 0, pitchCor: number = 0, rollCor: number = 0, result: Quaternion) {
+const setDirection = (localAxis: Vector3, yawCor: number = 0, pitchCor: number = 0, rollCor: number = 0, result: Quaternion) => {
     const yaw = -Math.atan2(localAxis.z, localAxis.x) + Math.PI / 2;
     const len = Math.sqrt(localAxis.x * localAxis.x + localAxis.z * localAxis.z);
     const pitch = -Math.atan2(localAxis.y, len);
+
     Quaternion.RotationYawPitchRollToRef(yaw + yawCor, pitch + pitchCor, rollCor, result);
-}
+};
 
 export class Fireworks implements FireworksInterface {
     private scene: Scene;
@@ -57,12 +66,15 @@ export class Fireworks implements FireworksInterface {
 
     constructor(scene: Scene) {
         this.scene = scene;
-        // Load a texture 
-        let texture = new Texture('/media/flare.png', scene);
+
+        // Load a texture
+        const texture = new Texture('/media/flare.png', scene);
+
         // Create a plane with the texture
         this.plane = createPlaneWithTexture(scene, texture, 2, "plane");
 
         this.instanceProps = [];
+
         for (let i = 0; i < 1000; i++) {
             this.instanceProps.push({
                 position: Vector3.Zero(),
@@ -74,38 +86,45 @@ export class Fireworks implements FireworksInterface {
     }
 
     public shootFirework(x: number, y: number, z: number): void {
-        let firework = new TransformNode("firework", this.scene);
+        const firework = new TransformNode("firework", this.scene);
+
         firework.position = new Vector3(x, y, z + 80);
         firework.rotation.x = Math.PI / 2;
 
-        let particleSystem = new ParticleSystem("fountain", 350, this.scene);
-        let updateFunction = function(this: ParticleSystem, particles: Particle[]) {
+        const particleSystem = new ParticleSystem("fountain", 350, this.scene);
+
+        const updateFunction = function(this: ParticleSystem, particles: Particle[]) {
             firework.position.z = Scalar.SmoothStep(firework.position.z, z, 0.11);
             this.emitRate = this.emitRate >= 4 ? this.emitRate - 4 : 1;
             this.maxSize = this.maxSize > this.minSize ? this.maxSize - 0.005 : this.minSize;
+
             for (let index = 0; index < particles.length; index++) {
-                let particle = particles[index];
-                particle.age += this._scaledUpdateSpeed;
+                const particle = particles[index];
+
+                particle.age += (this as any)._scaledUpdateSpeed;
+
                 if (particle.age >= particle.lifeTime) {
                     this.recycleParticle(particle);
                     index--;
                 } else {
                     particle.size -= 0.01;
-                    particle.direction.scaleToRef(particleSystem._scaledUpdateSpeed, particleSystem._scaledDirection);
-                    particle.position.addInPlace(particleSystem._scaledDirection);
-                    particleSystem.gravity.scaleToRef(particleSystem._scaledUpdateSpeed, particleSystem._scaledGravity);
-                    particle.direction.addInPlace(particleSystem._scaledGravity);
+                    particle.direction.scaleToRef((particleSystem as any)._scaledUpdateSpeed, (particleSystem as any)._scaledDirection);
+                    particle.position.addInPlace((particleSystem as any)._scaledDirection);
+                    particleSystem.gravity.scaleToRef((particleSystem as any)._scaledUpdateSpeed, (particleSystem as any)._scaledGravity);
+                    particle.direction.addInPlace((particleSystem as any)._scaledGravity);
                 }
             }
+
             if (this.emitRate === 1) {
                 this.stop();
             }
         };
+
         particleSystem.particleTexture = new Texture('/media/flare.png', this.scene);
         particleSystem.updateFunction = updateFunction;
-        particleSystem.emitter = firework;
+        particleSystem.emitter = firework as AbstractMesh;
         particleSystem.createConeEmitter(2, 0.5);
-        particleSystem.particleEmitterType.emitFromSpawnPointOnly = true;
+        (particleSystem.particleEmitterType as ConeParticleEmitter).emitFromSpawnPointOnly = true;
         particleSystem.color1 = new Color4(1, 0.9, 0.8, 1.0);
         particleSystem.color2 = new Color4(1, 0.5, 0.2, 1.0);
         particleSystem.colorDead = new Color4(0, 0, 0, 0);
@@ -121,6 +140,7 @@ export class Fireworks implements FireworksInterface {
         particleSystem.maxEmitPower = 30;
         particleSystem.updateSpeed = 1 / 60;
         particleSystem.disposeOnStop = true;
+
         particleSystem.onStoppedObservable.add(() => {
             setTimeout(() => {
                 this.explodeFirework(firework.position);
@@ -133,15 +153,17 @@ export class Fireworks implements FireworksInterface {
     // Use 3D polar coordinates to generate a random vector
     private generateSphericallyRandomVector(_r?: number): Vector3 {
         if (!_r) _r = 1;
-        let theta = window.xorshift() * 2 * Math.PI;
-        let phi = Math.acos(window.xorshift() * 2 - 1);
+        let theta = xorshift() * 2 * Math.PI;
+        let phi = Math.acos(xorshift() * 2 - 1);
         let r = xorshift() * _r;
+
         return new Vector3(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
     }
 
     private explodeFirework(position: Vector3): void {
-        const color = new Color4(xorshift()+.4, xorshift()+.4, xorshift()+.4, 1);
-        this.plane.material.emissiveColor = color;
+        const color = new Color3(xorshift() + 0.4, xorshift() + 0.4, xorshift() + 0.4);
+
+        (this.plane.material as StandardMaterial).emissiveColor = color;
         let m = Matrix.Identity();
         let matricesData = new Float32Array(16 * this.instanceProps.length);
 
@@ -149,11 +171,12 @@ export class Fireworks implements FireworksInterface {
         const scaling = new Vector3(0.1, 1, 1);
 
         for (let i = 0; i < this.instanceProps.length; i++) {
-            let sRandom = this.generateSphericallyRandomVector();
+            const sRandom = this.generateSphericallyRandomVector();
+
             this.instanceProps[i].position.set(position.x, position.y, position.z);
             this.instanceProps[i].direction = sRandom; // Send the sprites off in random directions
             this.instanceProps[i].direction.normalize();
-            this.instanceProps[i].direction.scaleInPlace((9+1*xorshift())/8);  // use /10 if close to wheel
+            this.instanceProps[i].direction.scaleInPlace((9 + 1 * xorshift()) / 8);  // use /10 if close to wheel
             this.instanceProps[i].scaling = scaling;
             Matrix.ComposeToRef(scaling, rotation, position, m);
             m.copyToArray(matricesData, i * 16);
@@ -203,11 +226,14 @@ export class Fireworks implements FireworksInterface {
             }
 
             // Fade out the original instance
-            this.plane.material.alpha -= 0.0025*this.scene.getAnimationRatio();
-            if (this.plane.material.alpha <= 0) {
-                this.plane.material.isVisible = false;
-                this.plane.dispose(false, true);
-                this.scene.unregisterBeforeRender(beforeRender);
+            if (this.plane?.material) {
+                this.plane.material.alpha -= 0.0025 * this.scene.getAnimationRatio();
+
+                if (this.plane.material.alpha <= 0) {
+                    // this.plane.material.isVisible = false;
+                    this.plane.dispose(false, true);
+                    this.scene.unregisterBeforeRender(beforeRender);
+                }
             }
 
             this.plane.thinInstanceBufferUpdated("matrix");
@@ -216,4 +242,3 @@ export class Fireworks implements FireworksInterface {
     }
 
 }
-
