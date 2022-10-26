@@ -1,11 +1,14 @@
-import {Scene} from "@babylonjs/core/scene";
-import {
-    Color4,
-    MeshBuilder, Particle, ParticleSystem, Scalar, Texture, TransformNode,
-    Vector3,
-    StandardMaterial, Matrix, Quaternion, Mesh
-} from "@babylonjs/core";
-
+import { Scene } from '@babylonjs/core/scene';
+import { Color4 } from '@babylonjs/core/Maths/math.color';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
+import { Particle } from '@babylonjs/core/Particles/particle';
+import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
+import { Scalar } from '@babylonjs/core/Maths/math.scalar';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 
 // https://en.wikipedia.org/wiki/Xorshift#xorwow
 window.xorshift = function() {
