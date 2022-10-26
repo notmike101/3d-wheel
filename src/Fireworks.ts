@@ -1,3 +1,5 @@
+import '@babylonjs/core/Meshes/thinInstanceMesh';
+
 import { Scene } from '@babylonjs/core/scene';
 import { Color4 } from '@babylonjs/core/Maths/math.color';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
