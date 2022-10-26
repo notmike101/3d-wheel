@@ -9,12 +9,12 @@ import type { Texture } from '@babylonjs/core/Materials/Textures/texture';
 export const splitHash = (splitter = '|') => decodeURI(location.hash.substring(1, location.hash.length)).split(splitter).filter((item) => Boolean(item)) ?? [];
 
 export const shuffleArrayInPlace = (target: unknown[]) => {
-  for (let i = target.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = target[i];
+  for (let index = target.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    const temp = target[index];
 
-    target[i] = target[j];
-    target[j] = temp;
+    target[index] = target[randomIndex];
+    target[randomIndex] = temp;
   }
 };
 
