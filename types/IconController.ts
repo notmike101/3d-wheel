@@ -1,20 +1,20 @@
 import { HelpIcon } from '../src/Icons';
 import { EditorIcon } from '../src/Icons';
 
-interface IconInterface {
+export interface IconInterface {
   isModalVisible: boolean;
   isIconVisible: boolean;
 
-  toggleModalVisibility();
-  toggleIconVisibility();
-  setModalInnerContent(content: any);
+  toggleModalVisibility(): void;
+  toggleIconVisibility(): void;
+  setModalInnerContent(content: any): void;
 }
 
-interface Icons {
+export interface Icons {
   help?: HelpIcon;
   editor?: EditorIcon;
 }
 
-interface IconControllerInterface {
+export interface IconControllerInterface {
   isVisible: boolean;
 }

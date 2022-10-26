@@ -1,4 +1,4 @@
-interface WheelInterface {
+export interface WheelInterface {
   isSpinning: boolean;
 
   updateWheelItems(wheelItem: string[]);
@@ -6,7 +6,7 @@ interface WheelInterface {
   spin(): Promise<string>;
 }
 
-interface WheelPhysics {
+export interface WheelPhysics {
   rotationSpeed: number;
   rotationAcceleration: number;
   friction: number;

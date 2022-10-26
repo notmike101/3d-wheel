@@ -1,6 +1,6 @@
 import { HelpIcon, EditorIcon } from '@/Icons';
 
-import type { IconControllerInterface, Icons } from '@type/iconcontroller';
+import type { IconControllerInterface, Icons } from '@type/IconController';
 import type { Wheel } from '@/Wheel';
 
 export class IconController implements IconControllerInterface {
