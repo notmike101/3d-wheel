@@ -77,7 +77,7 @@ export class Fireworks implements FireworksInterface {
             }
         };
 
-        particleSystem.particleTexture = new Texture('/media/flare.png', this.scene);
+        particleSystem.particleTexture = new Texture('./media/flare.png', this.scene);
         particleSystem.updateFunction = updateFunction;
         particleSystem.emitter = firework as AbstractMesh;
         particleSystem.createConeEmitter(2, 0.5);
