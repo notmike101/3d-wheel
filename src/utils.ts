@@ -23,12 +23,11 @@ export const waitFor = (waitTime = 0) => new Promise<void>((resolve) => setTimeo
 
 export const makeColorGradient = (frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center = 128, width = 127, len = 50) => {
   const output: Color3[] = [];
-  const offset = width + center;
 
   for (let i = 0; i < len; i += 1) {
-    const red = Math.sin(frequency1 * i + phase1) * offset;
-    const green = Math.sin(frequency2 * i + phase2) * offset;
-    const blue = Math.sin(frequency3 * i + phase3) * offset;
+    const red = Math.sin(frequency1 * i + phase1) * width + center;
+    const green = Math.sin(frequency2 * i + phase2) * width + center;
+    const blue = Math.sin(frequency3 * i + phase3) * width + center;
 
     output.push(new Color3(red / 255, green / 255, blue / 255));
   }
