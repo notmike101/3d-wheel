@@ -1,13 +1,9 @@
-import { HelpIcon, EditorIcon } from './Icons';
+import { HelpIcon, EditorIcon } from '@/Icons';
 
-import type { Icon } from './Icons';
-import type { Wheel } from './Wheel';
+import type { IconControllerInterface, Icons } from '@type/iconcontroller';
+import type { Wheel } from '@/Wheel';
 
-interface Icons {
-  [key: string]: Icon;
-}
-
-export class IconController {
+export class IconController implements IconControllerInterface {
   private iconContainer: HTMLDivElement;
   private icons: Icons;
 
@@ -17,9 +13,9 @@ export class IconController {
 
     this.iconContainer.querySelectorAll('img').forEach((iconElement) => {
       if (iconElement.dataset.modalid === 'help') {
-        this.icons[iconElement.dataset.modalid!] = new HelpIcon(iconElement);
+        this.icons[iconElement.dataset.modalid] = new HelpIcon(iconElement);
       } else if (iconElement.dataset.modalid === 'editor') {
-        this.icons[iconElement.dataset.modalid!] = new EditorIcon(iconElement, wheel);
+        this.icons[iconElement.dataset.modalid] = new EditorIcon(iconElement, wheel);
       }
     });
 

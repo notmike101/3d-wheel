@@ -1,4 +1,5 @@
 import { Icon } from './Icon';
+
 import type { Wheel } from '../Wheel';
 
 export class EditorIcon extends Icon {
@@ -47,7 +48,3 @@ export class EditorIcon extends Icon {
     }
   }
 }
-
-export default Object.freeze({
-  EditorIcon,
-});

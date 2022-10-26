@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@type': path.resolve(__dirname, './types'),
     },
   },
   base: mode === 'development' ? '/' : '/3d-wheel/',

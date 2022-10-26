@@ -1,15 +1,14 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
-import { Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 
 import type { Scene } from '@babylonjs/core/scene';
 import type { Texture } from '@babylonjs/core/Materials/Textures/texture';
-import type { Vector3 } from '@babylonjs/core/Maths/math.vector';
 
 export const splitHash = (splitter = '|') => decodeURI(location.hash.substring(1, location.hash.length)).split(splitter).filter((item) => Boolean(item)) ?? [];
 
-export const shuffleArrayInPlace = (target: any[]) => {
+export const shuffleArrayInPlace = (target: unknown[]) => {
   for (let i = target.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     const temp = target[i];
@@ -36,9 +35,10 @@ export const makeColorGradient = (frequency1: number, frequency2: number, freque
   return output;
 };
 
-let shift: any = () => {
+let shift = (() => {
   const a = new Uint32Array(1);
   const x = new Uint32Array(1);
+
   a[0] = 1337;
 
   return () => {
@@ -49,9 +49,7 @@ let shift: any = () => {
 
       return a[0] = x[0];
   }
-};
-
-shift = shift();
+})();
 
 export const xorshift = () => shift() / 4294967296;
 
@@ -75,4 +73,14 @@ export const setQuaternionDirection = (localAxis: Vector3, yawCor = 0, pitchCor 
   const pitch = -Math.atan2(localAxis.y, len);
 
   Quaternion.RotationYawPitchRollToRef(yaw + yawCor, pitch + pitchCor, rollCor, result);
+};
+
+export const generateSphericallyRandomVector = (seed?: number) => {
+  if (!seed) seed = 1;
+
+  const theta = xorshift() * 2 * Math.PI;
+  const phi = Math.acos(xorshift() * 2 - 1);
+  const random = xorshift() * seed;
+
+  return new Vector3(random * Math.sin(phi) * Math.cos(theta), random * Math.sin(phi) * Math.sin(theta), random * Math.cos(phi));
 };

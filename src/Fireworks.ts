@@ -11,8 +11,9 @@ import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
-import { xorshift, createPlaneWithTexture, setQuaternionDirection } from './utils';
+import { xorshift, createPlaneWithTexture, setQuaternionDirection, generateSphericallyRandomVector } from './utils';
 
+import type { FireworksInterface } from '@type/fireworks';
 import type { ConeParticleEmitter } from '@babylonjs/core/Particles/EmitterTypes/coneParticleEmitter';
 
 export class Fireworks implements FireworksInterface {
@@ -106,16 +107,6 @@ export class Fireworks implements FireworksInterface {
         particleSystem.start();
     }
 
-    // Use 3D polar coordinates to generate a random vector
-    private generateSphericallyRandomVector(_r?: number) {
-        if (!_r) _r = 1;
-        let theta = xorshift() * 2 * Math.PI;
-        let phi = Math.acos(xorshift() * 2 - 1);
-        let r = xorshift() * _r;
-
-        return new Vector3(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
-    }
-
     public explodeFirework(position: Vector3) {
         const color = new Color3(xorshift() + 0.4, xorshift() + 0.4, xorshift() + 0.4);
 
@@ -127,7 +118,7 @@ export class Fireworks implements FireworksInterface {
         const scaling = new Vector3(0.1, 1, 1);
 
         for (let i = 0; i < this.instanceProps.length; i++) {
-            const sRandom = this.generateSphericallyRandomVector();
+            const sRandom = generateSphericallyRandomVector();
 
             this.instanceProps[i].position.set(position.x, position.y, position.z);
             this.instanceProps[i].direction = sRandom; // Send the sprites off in random directions
@@ -196,5 +187,4 @@ export class Fireworks implements FireworksInterface {
         };
         this.scene.registerBeforeRender(beforeRender);
     }
-
 }

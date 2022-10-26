@@ -1,8 +1,9 @@
 interface WheelInterface {
-  updateWheelItems(wheelItem: string[]): void;
-  getCurrentWinner(): number;
-  spin(): Promise<string | void>;
   isSpinning: boolean;
+
+  updateWheelItems(wheelItem: string[]);
+  getCurrentWinner(): number;
+  spin(): Promise<string>;
 }
 
 interface WheelPhysics {

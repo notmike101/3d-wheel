@@ -1,4 +1,6 @@
-export class Icon {
+import { IconInterface } from "@type/iconcontroller";
+
+export class Icon implements IconInterface {
   protected icon: HTMLElement;
   protected modal: HTMLElement;
   protected closeIcon: HTMLDivElement | null;
@@ -43,7 +45,3 @@ export class Icon {
     this.modal.querySelector('.inner')!.innerHTML = content;
   }
 }
-
-export default Object.freeze({
-  Icon,
-});

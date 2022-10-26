@@ -101,13 +101,15 @@ export class Wheel implements WheelInterface {
     this.wheelPhysics.rotationSpeed += this.wheelPhysics.rotationAcceleration * this.scene.getAnimationRatio();
 
     // how much to remove from current rotation speed
-    const frictionSpeedChange = this.wheelPhysics.rotationSpeed - (this.wheelPhysics.rotationSpeed * this.wheelPhysics.friction)
+    const frictionSpeedChange = this.wheelPhysics.rotationSpeed - (this.wheelPhysics.rotationSpeed * this.wheelPhysics.friction);
+
     this.wheelPhysics.rotationSpeed -= frictionSpeedChange * this.scene.getAnimationRatio();
     this.wheelPhysics.rotation += this.wheelPhysics.rotationSpeed * this.scene.getAnimationRatio();
     this.transformNode.rotation.y = this.wheelPhysics.rotation;
 
     if (this.wheelPhysics.rotationSpeed && this.wheelPhysics.rotationSpeed < 0.0005) {
       this.wheelPhysics.rotationSpeed = 0;
+
       // resolve spin promise
       if (this.spinResolver) {
         this.spinResolver();
@@ -131,7 +133,7 @@ export class Wheel implements WheelInterface {
         this.clickLow.play();
       }
 
-      if (this.flipPointer) this.flipPointer(1);
+      if (this.flipPointer) this.flipPointer();
     }
   }
 
