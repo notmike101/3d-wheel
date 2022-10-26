@@ -1,4 +1,4 @@
-import { IconInterface } from "@type/iconcontroller";
+import { IconInterface } from "@type/IconController";
 
 export class Icon implements IconInterface {
   protected icon: HTMLElement;
