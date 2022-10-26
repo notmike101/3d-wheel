@@ -74,9 +74,7 @@ export const setQuaternionDirection = (localAxis: Vector3, yawCor = 0, pitchCor 
   Quaternion.RotationYawPitchRollToRef(yaw + yawCor, pitch + pitchCor, rollCor, result);
 };
 
-export const generateSphericallyRandomVector = (seed?: number) => {
-  if (!seed) seed = 1;
-
+export const generateSphericallyRandomVector = (seed = 1) => {
   const theta = xorshift() * 2 * Math.PI;
   const phi = Math.acos(xorshift() * 2 - 1);
   const random = xorshift() * seed;
