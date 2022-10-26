@@ -34,7 +34,7 @@ export const makeColorGradient = (frequency1: number, frequency2: number, freque
   return output;
 };
 
-let shift = (() => {
+const shift = (() => {
   const a = new Uint32Array(1);
   const x = new Uint32Array(1);
 
