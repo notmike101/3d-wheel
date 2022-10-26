@@ -2,7 +2,7 @@ import { Wheel } from './Wheel';
 import { IconController } from './IconController';
 import './style.scss';
 
-const parseHash = () => decodeURI(location.hash.substring(1, location.hash.length)).split('|') ?? [];
+const parseHash = () => decodeURI(location.hash.substring(1, location.hash.length)).split('|').filter((item) => Boolean(item)) ?? [];
 
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
