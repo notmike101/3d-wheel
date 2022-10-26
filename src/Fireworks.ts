@@ -187,7 +187,7 @@ export class Fireworks implements FireworksInterface {
 
                 // drag coefficient
                 tmpVec1.copyFrom(this.instanceProps[i].direction);
-                tmpVec1.scaleInPlace(0.02);
+                tmpVec1.scaleInPlace(0.015);
                 tmpVec1.scaleInPlace(this.scene.getAnimationRatio());
                 this.instanceProps[i].direction.subtractInPlace(tmpVec1);
 
