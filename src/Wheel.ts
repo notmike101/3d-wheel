@@ -17,6 +17,7 @@ import { Texture, Space } from './constants';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
 import { Sound } from '@babylonjs/core/Audio/sound';
 import { easeOutElastic, easeOutSigmoid } from './easings';
+import {Fireworks} from "@/Fireworks";
 
 function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
   const output: Color3[] = [];
@@ -87,6 +88,8 @@ export class Wheel implements WheelInterface {
     this.scene = new Scene(this.engine);
     // this.camera = new ArcRotateCamera('camera', Math.PI / 2, 0.4, 2, new Vector3(0, 0, 0), this.scene);
     this.camera = new ArcRotateCamera('camera', Math.PI / 2, 0, 1.5, new Vector3(0, 0, 0), this.scene);
+    // set  camera near and far clip planes
+    this.camera.minZ = 0.01;
     this.transformNode = new TransformNode('transformNode', this.scene);
     this.colors = makeColorGradient(0.9, 0.9, 0.9, 0, 2, 4, 164, 91);
     this.clickHigh = new Sound('ClickHigh', './media/click_high.wav', this.scene);
@@ -104,6 +107,20 @@ export class Wheel implements WheelInterface {
     this.scene.registerBeforeRender(this.wheelUpdate.bind(this));
     window.addEventListener('resize', this.resizeEvent.bind(this));
     document.addEventListener('click', () => Engine.audioEngine!.audioContext!.resume());
+
+    // Register onclick for right mouse button
+    this.canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+
+      // Trace cursor position
+      const pickResult = new Vector3(
+          (this.scene.pointerX - (e.currentTarget.offsetWidth  / 2)) * -0.0465,
+          -50,
+          (this.scene.pointerY - (e.currentTarget.offsetHeight / 2)) * 0.0465
+      );
+      const firework = new Fireworks(this.scene);
+      firework.explodeFirework(pickResult);
+    });
   }
 
   private wheelUpdate(): void {
@@ -311,7 +328,7 @@ export class Wheel implements WheelInterface {
     this.wheelPhysics.rotationAcceleration = 0.01;
     await waitFor(500); // how long to accelerate in ms
     this.wheelPhysics.rotationAcceleration = 0;
-    await waitFor(2500); // How long to hold in ms
+    await waitFor(2500+500*Math.random()); // How long to hold in ms
 
     this.wheelPhysics.friction = 0.9825;
     this.initialDecelerationSpeed = this.wheelPhysics.rotationSpeed;
@@ -323,7 +340,35 @@ export class Wheel implements WheelInterface {
 
     this.isSpinning = false;
 
+    this.triggerFireworks();
+
     return this.wheelItems[this.getCurrentWinner()];
 
+  }
+
+  private triggerFireworks() {
+    const waitTimes = [];
+    for (let i = 0; i < 12; i++) {
+      waitTimes.push((Math.random() * 400));
+    }
+    waitTimes.push(0);
+    this.prepareNextFirework(waitTimes);
+  }
+
+  private prepareNextFirework(waitTimes: number[]) {
+    if (this.isSpinning) {
+      return;
+    }
+    const waitTime = waitTimes.pop();
+    setTimeout(() => {
+      const y = (Math.random() * 50) + 25;
+      const x = (waitTimes.length % 2 === 0 ? -1 : 1) * ((Math.random() * y * 0.2) + (y * 0.4));
+      const z = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * y * 0.3);
+      const firework = new Fireworks(this.scene);
+      firework.shootFirework(x, -y, z);
+      if (waitTimes.length > 0) {
+        this.prepareNextFirework(waitTimes);
+      }
+    }, waitTime)
   }
 }
