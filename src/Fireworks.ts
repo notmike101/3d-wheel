@@ -68,7 +68,7 @@ export class Fireworks implements FireworksInterface {
         this.scene = scene;
 
         // Load a texture
-        const texture = new Texture('/media/flare.png', scene);
+        const texture = new Texture('./media/flare.png', scene);
 
         // Create a plane with the texture
         this.plane = createPlaneWithTexture(scene, texture, 2, "plane");
