@@ -14,7 +14,7 @@ export class IconController {
     this.iconContainer = iconContainer;
     this.icons = {};
 
-    this.iconContainer.querySelectorAll('div').forEach((iconElement: HTMLDivElement) => {
+    this.iconContainer.querySelectorAll('img').forEach((iconElement: HTMLDivElement) => {
       if (iconElement.dataset.modalid === 'help') {
         this.icons[iconElement.dataset.modalid!] = new HelpIcon(iconElement);
       } else if (iconElement.dataset.modalid === 'editor') {

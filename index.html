@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head> 
+  <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,15 +11,15 @@
     <canvas id="renderCanvas"></canvas>
     <div id="winner"></div>
     <div id="icons">
-      <div id="help-icon" class="icon fa-solid fa-info" data-modalid="help"></div>
-      <div id="edit-icon" class="icon fa-solid fa-pen-to-square" data-modalid="editor"></div>
+      <img src="https://img.icons8.com/material-rounded/25/000000/information.png" alt="info" class="icon" data-modalid="help" />
+      <img src="https://img.icons8.com/material-rounded/15/000000/edit--v1.png" alt="edit" class="icon" data-modalid="editor" />
     </div>
     <dialog id="help" class="modal">
-      <div id="help-close" class="close-icon fa-solid fa-xmark"></div>
+      <img alt="close modal" id="help-close" class="close-icon" src="https://img.icons8.com/material-rounded/24/000000/delete-sign.png" />
       <div class="inner"></div>
     </dialog>
     <dialog id="editor" class="modal">
-      <div id="editor-close" class="close-icon fa-solid fa-xmark"></div>
+      <img alt="close modal" id="editor-close" class="close-icon" src="https://img.icons8.com/material-rounded/24/000000/delete-sign.png" />
       <div class="inner"></div>
     </dialog>
     <div class="pyro" id="fireworks">
