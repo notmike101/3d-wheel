@@ -4,62 +4,62 @@ import { splitHash } from './utils';
 
 import './style.scss';
 
-window.addEventListener('DOMContentLoaded', () => {
-  const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
-  const winnerDiv = document.getElementById('winner') as HTMLDivElement;
-  const clickToSpinDiv = document.getElementById('clickToSpin') as HTMLDivElement;
-  const wheelOptions = splitHash('|');
-  const wheel = new Wheel(canvas, wheelOptions.length === 0 ? [''] : wheelOptions);
-  const iconController = new IconController(document.getElementById('icons') as HTMLDivElement, wheel);
+const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
+const winnerDiv = document.getElementById('winner') as HTMLDivElement;
+const clickToSpinDiv = document.getElementById('clickToSpin') as HTMLDivElement;
+const wheelOptions = splitHash('|');
+const wheel = new Wheel(canvas, wheelOptions.length === 0 ? [''] : wheelOptions);
+const iconController = new IconController(document.getElementById('icons') as HTMLDivElement, wheel);
 
-  const spinWheel = async () => {
-    if (winnerDiv) winnerDiv.style.display = 'none';
-    if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
+const spinWheel = async () => {
+  if (winnerDiv) winnerDiv.style.display = 'none';
+  if (clickToSpinDiv) clickToSpinDiv.style.display = 'none';
 
-    iconController.isVisible = false;
+  iconController.isVisible = false;
 
-    try {
-      const winner = await wheel.spin();
+  try {
+    const winner = await wheel.spin();
 
-      if (winnerDiv) {
-        winnerDiv.style.display = 'block';
-        winnerDiv.textContent = `${winner} wins!`
-      }
-
-      if (clickToSpinDiv) {
-        clickToSpinDiv.textContent = 'Click to spin again!';
-        clickToSpinDiv.style.top = 'calc(50% - 50px)';
-        clickToSpinDiv.style.display = 'flex';
-      }
-    } catch (err) {
-      console.warn(err);
+    if (winnerDiv) {
+      winnerDiv.style.display = 'block';
+      winnerDiv.textContent = `${winner} wins!`
     }
 
-    iconController.isVisible = true;
-  };
-
-  window.addEventListener('hashchange', () => {
-    try {
-      if (wheel.isSpinning === false) {
-        wheel.updateWheelItems(splitHash('|'));
-      }
-    } catch (err) {
-      console.warn(err);
+    if (clickToSpinDiv) {
+      clickToSpinDiv.textContent = 'Click to spin again!';
+      clickToSpinDiv.style.top = 'calc(50% - 50px)';
+      clickToSpinDiv.style.display = 'flex';
     }
-  });
+  } catch (err) {
+    console.warn(err);
+  }
 
-  const documentSpinClickHandler = async (event: PointerEvent) => {
-    if (event.button === 2) return;
+  iconController.isVisible = true;
+};
 
-    if (event.target === canvas || event.target === winnerDiv || event.target === clickToSpinDiv) {
-      document.removeEventListener('pointerup', documentSpinClickHandler);
+const hashChangeListener = () => {
+  try {
+    if (wheel.isSpinning === false) {
+      const options = splitHash('|');
 
-      await spinWheel();
-
-      document.addEventListener('pointerup', documentSpinClickHandler);
+      wheel.updateWheelItems(options.length === 0 ? [''] : options);
     }
-  };
+  } catch (err) {
+    console.warn(err);
+  }
+};
 
-  // canvas.addEventListener('pointerup', spinWheel);
-  document.addEventListener('pointerup', documentSpinClickHandler);
-});
+const documentSpinClickHandler = async (event: PointerEvent) => {
+  if (event.button === 2) return;
+
+  if (event.target === canvas || event.target === winnerDiv || event.target === clickToSpinDiv) {
+    document.removeEventListener('pointerup', documentSpinClickHandler);
+
+    await spinWheel();
+
+    document.addEventListener('pointerup', documentSpinClickHandler);
+  }
+};
+
+window.addEventListener('hashchange', hashChangeListener);
+document.addEventListener('pointerup', documentSpinClickHandler);
