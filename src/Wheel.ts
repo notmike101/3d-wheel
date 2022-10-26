@@ -13,12 +13,12 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { update as TweenUpdate, Tween } from '@tweenjs/tween.js';
-import { Texture, Space } from './constants';
+import { Texture, Space } from '@/constants';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
 import { Sound } from '@babylonjs/core/Audio/sound';
-import { easeOutElastic, easeOutSigmoid } from './easings';
-import { Fireworks } from './Fireworks';
-import { makeColorGradient, shuffleArrayInPlace, waitFor } from './utils';
+import { easeOutElastic, easeOutSigmoid } from '@/easings';
+import { Fireworks } from '@/Fireworks';
+import { makeColorGradient, shuffleArrayInPlace, waitFor } from '@/utils';
 
 import type { WheelInterface, WheelPhysics } from '@type/Wheel';
 

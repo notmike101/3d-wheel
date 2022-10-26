@@ -1,6 +1,6 @@
-import { Icon } from './Icon';
+import { Icon } from '@/Icons';
 
-import type { Wheel } from '../Wheel';
+import type { Wheel } from '@/Wheel';
 
 export class EditorIcon extends Icon {
   protected input: HTMLTextAreaElement;

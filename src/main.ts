@@ -1,8 +1,8 @@
-import { Wheel } from './Wheel';
-import { IconController } from './IconController';
-import { splitHash } from './utils';
+import { Wheel } from '@/Wheel';
+import { IconController } from '@/IconController';
+import { splitHash } from '@/utils';
 
-import './style.scss';
+import '@/style.scss';
 
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 const winnerDiv = document.getElementById('winner') as HTMLDivElement;

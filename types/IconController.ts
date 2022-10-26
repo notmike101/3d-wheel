@@ -1,5 +1,5 @@
-import { HelpIcon } from '../src/Icons';
-import { EditorIcon } from '../src/Icons';
+import { HelpIcon } from '@/Icons';
+import { EditorIcon } from '@/Icons';
 
 export interface IconInterface {
   isModalVisible: boolean;

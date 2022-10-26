@@ -11,7 +11,7 @@ import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
-import { xorshift, createPlaneWithTexture, setQuaternionDirection, generateSphericallyRandomVector } from './utils';
+import { xorshift, createPlaneWithTexture, setQuaternionDirection, generateSphericallyRandomVector } from '@/utils';
 
 import type { FireworksInterface } from '@type/Fireworks';
 import type { ConeParticleEmitter } from '@babylonjs/core/Particles/EmitterTypes/coneParticleEmitter';

@@ -1,6 +1,6 @@
 // @ts-ignore
 import { html as ReadmeHTML } from '@/../README.md';
-import { Icon } from './Icon';
+import { Icon } from '@/Icons';
 
 export class HelpIcon extends Icon {
   constructor(icon: HTMLElement) {
