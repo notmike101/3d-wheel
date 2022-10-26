@@ -5,7 +5,7 @@ export class EditorIcon extends Icon {
   protected input: HTMLTextAreaElement;
   private wheel: Wheel;
 
-  constructor(iconElement: HTMLDivElement, wheel: Wheel) {
+  constructor(iconElement: HTMLElement, wheel: Wheel) {
     super(iconElement);
 
     this.input = document.createElement('textarea');
@@ -18,26 +18,26 @@ export class EditorIcon extends Icon {
 
     this.modal.querySelector('.inner')!.appendChild(this.input);
 
-    window.addEventListener('hashchange', (): void => {
+    window.addEventListener('hashchange', () => {
       if (this.wheel.isSpinning === false) {
         this.input.value = this.hashItems.join('\n');
       }
     });
   }
 
-  get hashItems(): string[] {
+  get hashItems() {
     return decodeURI(location.hash.substring(1, location.hash.length)).split('|') ?? [];
   }
 
-  private handleTextareaChange(): void {
+  private handleTextareaChange() {
     if (this.wheel.isSpinning === false) {
-      const hashItems: string[] = this.input.value.split('\n');
+      const hashItems = this.input.value.split('\n');
 
       location.hash = hashItems.join('|');
     }
   }
 
-  public toggleModalVisibility(): void {
+  public toggleModalVisibility() {
     this.isModalVisible = !this.isModalVisible;
 
     if (this.modal.classList.contains('show')) {

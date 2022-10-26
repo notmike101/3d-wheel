@@ -1,4 +1,5 @@
 import { HelpIcon, EditorIcon } from './Icons';
+
 import type { Icon } from './Icons';
 import type { Wheel } from './Wheel';
 
@@ -14,7 +15,7 @@ export class IconController {
     this.iconContainer = iconContainer;
     this.icons = {};
 
-    this.iconContainer.querySelectorAll('img').forEach((iconElement: HTMLDivElement) => {
+    this.iconContainer.querySelectorAll('img').forEach((iconElement) => {
       if (iconElement.dataset.modalid === 'help') {
         this.icons[iconElement.dataset.modalid!] = new HelpIcon(iconElement);
       } else if (iconElement.dataset.modalid === 'editor') {
@@ -25,7 +26,7 @@ export class IconController {
     this.isVisible = true;
   }
 
-  get isVisible(): boolean {
+  get isVisible() {
     return this.iconContainer.classList.contains('show');
   }
 

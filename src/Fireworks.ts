@@ -51,7 +51,7 @@ const createPlaneWithTexture = (scene: Scene, texture: Texture, size: number, na
 };
 
 
-const setDirection = (localAxis: Vector3, yawCor: number = 0, pitchCor: number = 0, rollCor: number = 0, result: Quaternion) => {
+const setDirection = (localAxis: Vector3, yawCor = 0, pitchCor = 0, rollCor = 0, result: Quaternion) => {
     const yaw = -Math.atan2(localAxis.z, localAxis.x) + Math.PI / 2;
     const len = Math.sqrt(localAxis.x * localAxis.x + localAxis.z * localAxis.z);
     const pitch = -Math.atan2(localAxis.y, len);
@@ -85,7 +85,7 @@ export class Fireworks implements FireworksInterface {
         }
     }
 
-    public shootFirework(x: number, y: number, z: number): void {
+    public shootFirework(x: number, y: number, z: number) {
         const firework = new TransformNode("firework", this.scene);
 
         firework.position = new Vector3(x, y, z + 80);
@@ -151,7 +151,7 @@ export class Fireworks implements FireworksInterface {
     }
 
     // Use 3D polar coordinates to generate a random vector
-    private generateSphericallyRandomVector(_r?: number): Vector3 {
+    private generateSphericallyRandomVector(_r?: number) {
         if (!_r) _r = 1;
         let theta = xorshift() * 2 * Math.PI;
         let phi = Math.acos(xorshift() * 2 - 1);
@@ -160,7 +160,7 @@ export class Fireworks implements FireworksInterface {
         return new Vector3(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
     }
 
-    private explodeFirework(position: Vector3): void {
+    public explodeFirework(position: Vector3) {
         const color = new Color3(xorshift() + 0.4, xorshift() + 0.4, xorshift() + 0.4);
 
         (this.plane.material as StandardMaterial).emissiveColor = color;

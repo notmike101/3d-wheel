@@ -4,9 +4,9 @@ import { Icon } from './Icon';
 
 export class HelpIcon extends Icon {
 
-  constructor(icon: HTMLDivElement) {
+  constructor(icon: HTMLElement) {
     super(icon);
-    
+
     this.setModalInnerContent(ReadmeHTML);
   }
 }

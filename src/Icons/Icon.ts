@@ -1,25 +1,25 @@
 export class Icon {
-  protected icon: HTMLDivElement;
-  protected modal: HTMLDivElement;
+  protected icon: HTMLElement;
+  protected modal: HTMLElement;
   protected closeIcon: HTMLDivElement | null;
   public isModalVisible: boolean;
   public isIconVisible: boolean;
 
-  constructor(icon: HTMLDivElement) {
+  constructor(icon: HTMLElement) {
     this.icon = icon;
-    this.modal = document.getElementById(icon.dataset.modalid!) as HTMLDivElement;
+    this.modal = document.getElementById(icon.dataset.modalid!) as HTMLElement;
     this.isModalVisible = false;
     this.isIconVisible = true;
 
     this.icon.addEventListener('pointerup', this.toggleModalVisibility.bind(this));
     this.closeIcon = this.modal.querySelector('.close-icon');
-    
+
     if (this.closeIcon) {
       this.closeIcon.addEventListener('pointerup', this.toggleModalVisibility.bind(this));
     }
   }
 
-  public toggleModalVisibility(): void {
+  public toggleModalVisibility() {
     this.isModalVisible = !this.isModalVisible;
 
     if (this.modal.classList.contains('show')) {
@@ -29,7 +29,7 @@ export class Icon {
     }
   }
 
-  public toggleIconVisibility(): void {
+  public toggleIconVisibility() {
     this.isIconVisible = !this.isIconVisible;
 
     if (this.icon.classList.contains('show')) {
@@ -39,7 +39,7 @@ export class Icon {
     }
   }
 
-  public setModalInnerContent(content: any): void {
+  public setModalInnerContent(content: any) {
     this.modal.querySelector('.inner')!.innerHTML = content;
   }
 }

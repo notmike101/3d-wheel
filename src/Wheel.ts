@@ -19,33 +19,31 @@ import { Sound } from '@babylonjs/core/Audio/sound';
 import { easeOutElastic, easeOutSigmoid } from './easings';
 import {Fireworks} from "@/Fireworks";
 
-function makeColorGradient(frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center: number = 128, width: number = 127, len: number = 50) : Color3[] {
+const makeColorGradient = (frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center = 128, width = 127, len = 50) => {
   const output: Color3[] = [];
 
-  for (let i: number = 0; i < len; i += 1) {
-    const red: number = Math.sin(frequency1 * i + phase1) * width + center;
-    const green: number = Math.sin(frequency2 * i + phase2) * width + center;
-    const blue: number = Math.sin(frequency3 * i + phase3) * width + center;
+  for (let i = 0; i < len; i += 1) {
+    const red = Math.sin(frequency1 * i + phase1) * width + center;
+    const green = Math.sin(frequency2 * i + phase2) * width + center;
+    const blue = Math.sin(frequency3 * i + phase3) * width + center;
 
     output.push(new Color3(red / 255, green / 255, blue / 255));
   }
 
   return output;
-}
+};
 
-function shuffleArrayInPlace(target: any[]): void {
-  for (let i: number = target.length - 1; i > 0; i -= 1) {
-    const j: number = Math.floor(Math.random() * (i + 1));
-    const temp: any = target[i];
+const shuffleArrayInPlace = (target: any[]) => {
+  for (let i = target.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = target[i];
 
     target[i] = target[j];
     target[j] = temp;
   }
-}
+};
 
-function waitFor(waitTime: number = 0): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, waitTime))
-}
+const waitFor = (waitTime = 0) => new Promise<void>((resolve) => setTimeout(resolve, waitTime));
 
 export class Wheel implements WheelInterface {
   private canvas: HTMLCanvasElement;
@@ -60,7 +58,7 @@ export class Wheel implements WheelInterface {
   private clickHigh: Sound;
   private clickLow: Sound;
   private flipPointer: Function | null;
-  private currentWinner: number;  
+  private currentWinner: number;
   private wheelPhysics: WheelPhysics;
   private spinResolver: any;
   private initialDecelerationSpeed: number;
@@ -114,16 +112,18 @@ export class Wheel implements WheelInterface {
 
       // Trace cursor position
       const pickResult = new Vector3(
-          (this.scene.pointerX - (e.currentTarget.offsetWidth  / 2)) * -0.0465,
+          (this.scene.pointerX - ((e.currentTarget as HTMLElement).offsetWidth  / 2)) * -0.0465,
           -50,
-          (this.scene.pointerY - (e.currentTarget.offsetHeight / 2)) * 0.0465
+          (this.scene.pointerY - ((e.currentTarget as HTMLElement).offsetHeight / 2)) * 0.0465
       );
+
       const firework = new Fireworks(this.scene);
+
       firework.explodeFirework(pickResult);
     });
   }
 
-  private wheelUpdate(): void {
+  private wheelUpdate() {
     // Update physics (scaled by frame delta time)
     this.wheelPhysics.rotationSpeed += this.wheelPhysics.rotationAcceleration * this.scene.getAnimationRatio();
 
@@ -145,12 +145,13 @@ export class Wheel implements WheelInterface {
     if (this.wheelPhysics.friction < 1) {
       this.camera.beta = 0.01+ 0.8552 * (this.wheelPhysics.rotationSpeed / this.initialDecelerationSpeed);
     }
-    
+
     // Calculate winner and play sounds if needed
     let tempWinner = this.getCurrentWinner();
+
     if (tempWinner !== this.currentWinner) {
       this.currentWinner = tempWinner;
-      
+
       if (Math.round(Math.random()) === 0) {
         this.clickHigh.play();
       } else {
@@ -161,13 +162,13 @@ export class Wheel implements WheelInterface {
     }
   }
 
-  private renderLoop(): void {
+  private renderLoop() {
     TweenUpdate(performance.now());
     this.scene.render();
   }
 
-  private createNotch(offset: number = 0): void {
-    const notch: Mesh = CreateCylinder('notch', { height: 0.025, diameterTop: 0.01, diameterBottom: 0.01 }, this.scene);
+  private createNotch(offset = 0) {
+    const notch = CreateCylinder('notch', { height: 0.025, diameterTop: 0.01, diameterBottom: 0.01 }, this.scene);
     const isEven = this.wheelItems.length % 2 === 0;
 
     notch.position.y += 0.0125;
@@ -179,10 +180,10 @@ export class Wheel implements WheelInterface {
     notch.parent = this.transformNode;
   }
 
-  private createName(name: string = '', offset: number = 0): void {
-    const nameTexture: DynamicTexture = new DynamicTexture(`nametexture_${name}`, { width: 500, height: 50 }, this.scene);
-    const namePlane: Mesh = CreatePlane(`namemesh_${name}`, { width: .5, height: .05 }, this.scene);
-    const nameMaterial: StandardMaterial = new StandardMaterial(`namematerial_${name}`, this.scene);
+  private createName(name = '', offset = 0) {
+    const nameTexture = new DynamicTexture(`nametexture_${name}`, { width: 500, height: 50 }, this.scene);
+    const namePlane = CreatePlane(`namemesh_${name}`, { width: .5, height: .05 }, this.scene);
+    const nameMaterial = new StandardMaterial(`namematerial_${name}`, this.scene);
 
     nameTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
     nameTexture.hasAlpha = true;
@@ -202,19 +203,19 @@ export class Wheel implements WheelInterface {
 
     namePlane.markAsDirty();
     namePlane.translate(Axis.X, -0.25, Space.LOCAL);
-    
+
     namePlane.parent = this.transformNode;
   }
 
-  private createSlices(): void {
-    for (let index: number = 0; index < this.wheelItems.length; index += 1) {
-      const wheelOption: string = this.wheelItems[index];
-      const slice: Mesh = CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
-      const sliceColor: StandardMaterial = new StandardMaterial(`material_${wheelOption}`, this.scene);
-  
+  private createSlices() {
+    for (let index = 0; index < this.wheelItems.length; index += 1) {
+      const wheelOption = this.wheelItems[index];
+      const slice = CreateCylinder(`cylendar_${wheelOption}`, { arc: this.sizeOfSlice, height: 0.01 }, this.scene);
+      const sliceColor = new StandardMaterial(`material_${wheelOption}`, this.scene);
+
       sliceColor.emissiveColor = this.colors[index];
       sliceColor.diffuseColor = Color3.Black();
-  
+
       slice.material = sliceColor;
       slice.rotation.y = ((Math.PI * 2) * this.sizeOfSlice) * (index + 0.5);
 
@@ -225,12 +226,12 @@ export class Wheel implements WheelInterface {
     }
   }
 
-  private createWinnerPointer(): void {
-    const winnerPointer: Mesh = new Mesh('winnerPointer', this.scene);
-    const winnerPointerBorder: Mesh = new Mesh('winnerPointer', this.scene);
-    const winnerPointerMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
-    const winnerPointerBorderMaterial: StandardMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
-    const winnerPointerVertexData: VertexData = new VertexData();
+  private createWinnerPointer() {
+    const winnerPointer = new Mesh('winnerPointer', this.scene);
+    const winnerPointerBorder = new Mesh('winnerPointer', this.scene);
+    const winnerPointerMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
+    const winnerPointerBorderMaterial = new StandardMaterial('winnerPointerMaterial', this.scene);
+    const winnerPointerVertexData = new VertexData();
 
     winnerPointerBorder.scaling.x /= 150;
     winnerPointerBorder.scaling.y /= 150;
@@ -264,7 +265,7 @@ export class Wheel implements WheelInterface {
     winnerPointer.material = winnerPointerMaterial;
     winnerPointerBorder.material = winnerPointerBorderMaterial;
 
-    this.flipPointer = ((): void => {
+    this.flipPointer = (() => {
       new Tween(winnerPointer.rotation)
         .to({ y: [-Math.PI / 1.5, -Math.PI / 2] }, 1000)
         .easing(easeOutElastic)
@@ -272,18 +273,18 @@ export class Wheel implements WheelInterface {
     }).bind(this);
   }
 
-  private resizeEvent(): void {
+  private resizeEvent() {
     this.engine.resize();
   }
 
   // Clear all meshes from the scene and from memory
-  private newScene(): void {
-    for (let i: number = this.scene.meshes.length - 1; i >= 0; i -= 1) {
+  private newScene() {
+    for (let i = this.scene.meshes.length - 1; i >= 0; i -= 1) {
       this.scene.meshes[i].dispose();
     }
   }
 
-  public updateWheelItems(wheelItems: string[] = []): void {
+  public updateWheelItems(wheelItems: string[] = []) {
     if (this.isSpinning === true) throw new Error('Wheel is spinning');
     if (wheelItems.length === 0) throw new Error('No wheel options provided');
 
@@ -301,16 +302,16 @@ export class Wheel implements WheelInterface {
   }
 
   // Returns who would be winning based on where the pointer is pointing
-  public getCurrentWinner(): number {
-    const sliceArcWidth: number = ((Math.PI * 2) * this.sizeOfSlice);
-    const finalAngleOfRotation: number = (this.transformNode.rotation.y - sliceArcWidth / 2) % (Math.PI * 2);
-    const winningSlot: number = finalAngleOfRotation / sliceArcWidth;
-    const fixWinningSlot: number = Math.floor(this.wheelItems.length - winningSlot) % this.wheelItems.length;
+  public getCurrentWinner() {
+    const sliceArcWidth = ((Math.PI * 2) * this.sizeOfSlice);
+    const finalAngleOfRotation = (this.transformNode.rotation.y - sliceArcWidth / 2) % (Math.PI * 2);
+    const winningSlot = finalAngleOfRotation / sliceArcWidth;
+    const fixWinningSlot = Math.floor(this.wheelItems.length - winningSlot) % this.wheelItems.length;
 
     return fixWinningSlot;
   }
 
-  public async spin(): Promise<string | void> {
+  public async spin() {
     this.isSpinning = true;
 
     new Tween({ beta: this.camera.beta })
@@ -321,14 +322,14 @@ export class Wheel implements WheelInterface {
       })
       .start();
 
-    const spinPromise = new Promise((resolve) => {
+    const spinPromise = new Promise<void>((resolve) => {
       this.spinResolver = resolve;
     });
 
     this.wheelPhysics.rotationAcceleration = 0.01;
     await waitFor(500); // how long to accelerate in ms
     this.wheelPhysics.rotationAcceleration = 0;
-    await waitFor(2500+500*Math.random()); // How long to hold in ms
+    await waitFor(2500 + 500 * Math.random()); // How long to hold in ms
 
     this.wheelPhysics.friction = 0.9825;
     this.initialDecelerationSpeed = this.wheelPhysics.rotationSpeed;
@@ -347,10 +348,12 @@ export class Wheel implements WheelInterface {
   }
 
   private triggerFireworks() {
-    const waitTimes = [];
+    const waitTimes: number[] = [];
+
     for (let i = 0; i < 12; i++) {
       waitTimes.push((Math.random() * 400));
     }
+
     waitTimes.push(0);
     this.prepareNextFirework(waitTimes);
   }
@@ -359,13 +362,17 @@ export class Wheel implements WheelInterface {
     if (this.isSpinning) {
       return;
     }
+
     const waitTime = waitTimes.pop();
+
     setTimeout(() => {
       const y = (Math.random() * 50) + 25;
       const x = (waitTimes.length % 2 === 0 ? -1 : 1) * ((Math.random() * y * 0.2) + (y * 0.4));
       const z = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * y * 0.3);
       const firework = new Fireworks(this.scene);
+
       firework.shootFirework(x, -y, z);
+
       if (waitTimes.length > 0) {
         this.prepareNextFirework(waitTimes);
       }
