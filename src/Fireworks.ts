@@ -160,7 +160,6 @@ export class Fireworks implements FireworksInterface {
         // Temporary objects to avoid memory allocation in hot loop
         const GRAVITY = new Vector3(0, 0, 0.0033);
         const tmpVec1 = new Vector3();
-        const tmpVec2 = Vector3.Zero();
 
         const zeroQuat = Quaternion.Zero();
         const tmpQuat1 = new Quaternion();
@@ -188,13 +187,11 @@ export class Fireworks implements FireworksInterface {
                 this.instanceProps[i].direction.subtractInPlace(tmpVec1);
 
                 // Update angle of plane to face direction of travel
-                this.instanceProps[i].position.addToRef(this.instanceProps[i].direction, tmpVec1);
-                tmpVec1.subtractToRef(this.instanceProps[i].position, tmpVec2);
                 tmpQuat1.copyFrom(zeroQuat);
-                setDirection(tmpVec2, 0, Math.PI / 2, 0, tmpQuat1);
+                setDirection(this.instanceProps[i].direction, 0, Math.PI / 2, 0, tmpQuat1);
                 this.instanceProps[i].rotation = tmpQuat1;
 
-                // Simple scaling of y based on magnitude of velocity (Might cap the max here or use log)
+                // Simple scailing of y based on magnitude of velocity (Might cap the max here or use log)
                 this.instanceProps[i].scaling.y = this.instanceProps[i].direction.length();
                 Matrix.ComposeToRef(this.instanceProps[i].scaling, this.instanceProps[i].rotation, this.instanceProps[i].position, m);
                 m.copyToArray(matricesData, i * 16);
