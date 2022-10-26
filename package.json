@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@babylonjs/core": "^5.7.0",
-    "@tweenjs/tween.js": "^18.6.4",
-    "meshwriter": "^1.3.0"
+    "@tweenjs/tween.js": "^18.6.4"
   }
 }
