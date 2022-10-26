@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <base href="./" />
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon Wheel</title>
+    <script type="module" crossorigin src="/3d-wheel/assets/index.a1fefbf5.js"></script>
+    <link rel="stylesheet" href="/3d-wheel/assets/index.55603af2.css">
+  </head>
+  <body>
+    <div id="clickToSpin">Click to spin!</div>
+    <canvas id="renderCanvas"></canvas>
+    <div id="winner"></div>
+    <div id="icons">
+      <img src="https://img.icons8.com/material-rounded/25/000000/information.png" alt="info" class="icon" data-modalid="help" />
+      <img src="https://img.icons8.com/material-rounded/15/000000/edit--v1.png" alt="edit" class="icon" data-modalid="editor" />
+    </div>
+    <dialog id="help" class="modal">
+      <img alt="close modal" id="help-close" class="close-icon" src="https://img.icons8.com/material-rounded/24/000000/delete-sign.png" />
+      <div class="inner"></div>
+    </dialog>
+    <dialog id="editor" class="modal">
+      <img alt="close modal" id="editor-close" class="close-icon" src="https://img.icons8.com/material-rounded/24/000000/delete-sign.png" />
+      <div class="inner"></div>
+    </dialog>
+    <div class="pyro" id="fireworks">
+      <div class="before"></div>
+      <div class="after"></div>
+    </div>
+
+    
+  </body>
+</html>
