@@ -344,7 +344,6 @@ export class Wheel implements WheelInterface {
     this.triggerFireworks();
 
     return this.wheelItems[this.getCurrentWinner()];
-
   }
 
   private triggerFireworks() {
