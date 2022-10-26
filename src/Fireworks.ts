@@ -2,7 +2,6 @@ import '@babylonjs/core/Meshes/thinInstanceMesh';
 
 import { Scene } from '@babylonjs/core/scene';
 import { Color4, Color3 } from '@babylonjs/core/Maths/math.color';
-import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Particle } from '@babylonjs/core/Particles/particle';
 import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
 import { Scalar } from '@babylonjs/core/Maths/math.scalar';
@@ -12,52 +11,9 @@ import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { xorshift, createPlaneWithTexture, setQuaternionDirection } from './utils';
 
 import type { ConeParticleEmitter } from '@babylonjs/core/Particles/EmitterTypes/coneParticleEmitter';
-
-// https://en.wikipedia.org/wiki/Xorshift#xorwow
-let xorshift: any = () => {
-    const a = new Uint32Array(1);
-    const x = new Uint32Array(1);
-    a[0] = 1337;
-
-    return () => {
-        x[0] = a[0];
-        x[0] ^= x[0] << 13;
-        x[0] ^= x[0] >> 17;
-        x[0] ^= x[0] << 5;
-
-        return a[0] = x[0];
-    }
-};
-
-xorshift = xorshift();
-const _xorshift = xorshift;
-xorshift = () => _xorshift() / 4294967296;
-
-// Function to create a plane with a texture
-const createPlaneWithTexture = (scene: Scene, texture: Texture, size: number, name: string) => {
-    const plane = CreatePlane(name, {width: size, height: size}, scene);
-
-    plane.material = new StandardMaterial(name, scene);
-    plane.material.backFaceCulling = false;
-    (plane.material as StandardMaterial).diffuseTexture = texture;
-    (plane.material as StandardMaterial).opacityTexture = (plane.material as StandardMaterial).diffuseTexture;
-    // Emissive color is used to make the texture visible
-    (plane.material as StandardMaterial).emissiveColor = new Color3(1, 1, 1);
-    plane.isVisible = false;
-
-    return plane;
-};
-
-
-const setDirection = (localAxis: Vector3, yawCor = 0, pitchCor = 0, rollCor = 0, result: Quaternion) => {
-    const yaw = -Math.atan2(localAxis.z, localAxis.x) + Math.PI / 2;
-    const len = Math.sqrt(localAxis.x * localAxis.x + localAxis.z * localAxis.z);
-    const pitch = -Math.atan2(localAxis.y, len);
-
-    Quaternion.RotationYawPitchRollToRef(yaw + yawCor, pitch + pitchCor, rollCor, result);
-};
 
 export class Fireworks implements FireworksInterface {
     private scene: Scene;
@@ -216,7 +172,7 @@ export class Fireworks implements FireworksInterface {
 
                 // Update angle of plane to face direction of travel
                 tmpQuat1.copyFrom(zeroQuat);
-                setDirection(this.instanceProps[i].direction, 0, Math.PI / 2, 0, tmpQuat1);
+                setQuaternionDirection(this.instanceProps[i].direction, 0, Math.PI / 2, 0, tmpQuat1);
                 this.instanceProps[i].rotation = tmpQuat1;
 
                 // Simple scailing of y based on magnitude of velocity (Might cap the max here or use log)

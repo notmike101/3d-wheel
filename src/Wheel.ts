@@ -17,33 +17,8 @@ import { Texture, Space } from './constants';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
 import { Sound } from '@babylonjs/core/Audio/sound';
 import { easeOutElastic, easeOutSigmoid } from './easings';
-import {Fireworks} from "@/Fireworks";
-
-const makeColorGradient = (frequency1: number, frequency2: number, frequency3: number, phase1: number, phase2: number, phase3: number, center = 128, width = 127, len = 50) => {
-  const output: Color3[] = [];
-
-  for (let i = 0; i < len; i += 1) {
-    const red = Math.sin(frequency1 * i + phase1) * width + center;
-    const green = Math.sin(frequency2 * i + phase2) * width + center;
-    const blue = Math.sin(frequency3 * i + phase3) * width + center;
-
-    output.push(new Color3(red / 255, green / 255, blue / 255));
-  }
-
-  return output;
-};
-
-const shuffleArrayInPlace = (target: any[]) => {
-  for (let i = target.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = target[i];
-
-    target[i] = target[j];
-    target[j] = temp;
-  }
-};
-
-const waitFor = (waitTime = 0) => new Promise<void>((resolve) => setTimeout(resolve, waitTime));
+import { Fireworks } from './Fireworks';
+import { makeColorGradient, shuffleArrayInPlace, waitFor } from './utils';
 
 export class Wheel implements WheelInterface {
   private canvas: HTMLCanvasElement;
@@ -99,12 +74,10 @@ export class Wheel implements WheelInterface {
 
     this.updateWheelItems(wheelItems);
 
-    (window as any).wheel = this;
-
     this.engine.runRenderLoop(this.renderLoop.bind(this));
     this.scene.registerBeforeRender(this.wheelUpdate.bind(this));
     window.addEventListener('resize', this.resizeEvent.bind(this));
-    document.addEventListener('click', () => Engine.audioEngine!.audioContext!.resume());
+    document.addEventListener('click', () => Engine.audioEngine?.audioContext?.resume());
 
     // Register onclick for right mouse button
     this.canvas.addEventListener('contextmenu', (e) => {

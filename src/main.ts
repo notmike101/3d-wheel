@@ -1,15 +1,15 @@
 import { Wheel } from './Wheel';
 import { IconController } from './IconController';
-import './style.scss';
+import { splitHash } from './utils';
 
-const parseHash = () => decodeURI(location.hash.substring(1, location.hash.length)).split('|').filter((item) => Boolean(item)) ?? [];
+import './style.scss';
 
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
   const winnerDiv = document.getElementById('winner') as HTMLDivElement;
   const clickToSpinDiv = document.getElementById('clickToSpin') as HTMLDivElement;
-  const wheelOptions = parseHash();
-  const wheel = new Wheel(canvas, wheelOptions);
+  const wheelOptions = splitHash('|');
+  const wheel = new Wheel(canvas, wheelOptions.length === 0 ? [''] : wheelOptions);
   const iconController = new IconController(document.getElementById('icons') as HTMLDivElement, wheel);
 
   const spinWheel = async () => {
@@ -41,7 +41,7 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('hashchange', () => {
     try {
       if (wheel.isSpinning === false) {
-        wheel.updateWheelItems(parseHash());
+        wheel.updateWheelItems(splitHash('|'));
       }
     } catch (err) {
       console.warn(err);
